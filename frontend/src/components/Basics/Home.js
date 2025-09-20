@@ -5,8 +5,11 @@ import "./Home.css";
 function Home() {
 
   return (
+    
     <div className="home-container">
-
+      <center>
+          <img src="/images/logoo.png" alt="Logo" className="logo-body-image" />
+      </center> 
       <main className="hero">
         <h2>
           OSH Hardware PVT Ltd <br />
