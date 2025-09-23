@@ -16,9 +16,9 @@ function Header() {
     if (user.role === "admin") {
       navigate("/AdminDashboard");
     } else if (user.role === "supplier") {
-      navigate("/SalesDashboard");
+      navigate("/dashboard");
     } else {
-      navigate("/dashboard"); // default for normal users
+      navigate("/CustomerDashboard"); // default for normal users
     }
   };
 
@@ -39,7 +39,8 @@ function Header() {
       {/* ✅ Show button only if user exists */}
       {user && (
         <button className="btn-primary" onClick={handleDashboardRedirect}>
-          Get in touch
+          <span>📊</span>
+          <span className="font-semibold">Dashboard</span>
         </button>
       )}
     </header>

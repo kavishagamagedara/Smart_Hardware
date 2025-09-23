@@ -28,8 +28,8 @@ export default function Login() {
       const user = await login(form.email, form.password);
 
       if (user.role === "admin") navigate("/AdminDashboard");
-      else if (user.role === "supplier") navigate("/SalesDashboard");
-      else navigate("/dashboard");
+      else if (user.role === "supplier") navigate("/dashboard");
+      else navigate("/CustomerDashboard");
 
     } catch (ex) {
       setErr(ex.message || "Login failed");

@@ -9,7 +9,7 @@ const APIv2 = `${String(API).replace(/\/$/, "")}/api`;
 
 export default function Dashboard() {
   // add updateProfile/changePassword so Profile actually works
-  const { user, theme, setTheme, token, updateProfile, changePassword } = useAuth();
+  const { user, theme, setTheme, token, updateProfile, changePassword, logout } = useAuth();
   const navigate = useNavigate();
 
   const initials = useMemo(() => {
@@ -229,6 +229,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = () => {
+  logout();
+  navigate("/login", { replace: true });
+  };
+
   return (
     <div className="grid md:grid-cols-[260px_1fr] gap-4 mx-auto max-w-7xl px-4 py-6">
       {/* Sidebar */}
@@ -394,6 +399,14 @@ export default function Dashboard() {
             <span className="font-semibold">Settings</span>
           </button>
         </nav>
+        <hr className="my-4" /><div className="mt-4">
+        <button onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700"
+       >
+        <span>🚪</span>
+        <span className="font-semibold">Logout</span>
+        </button>
+        </div>
       </aside>
 
       {/* Main */}
@@ -775,43 +788,27 @@ export default function Dashboard() {
         )}
 
         {/* Plain user: Supplying */}
-        {tab === "supplying" && isPlainUser && (
-          <div className="card overflow-x-auto">
-            {suppliersErr && (
-              <div className="mb-3 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-200 px-3 py-2">
-                {suppliersErr}
-              </div>
-            )}
-            <table className="min-w-[720px] w-full">
-              <thead>
-                <tr className="text-left">
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingSuppliers ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-center text-slate-500">Loading…</td>
-                  </tr>
-                ) : suppliers.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-center text-slate-500">No suppliers yet</td>
-                  </tr>
-                ) : (
-                  suppliers.map((s) => (
-                    <tr key={s._id || s.email} className="border-t border-white/10">
-                      <td className="py-2">{s.name || "-"}</td>
-                      <td className="py-2">{s.email || "-"}</td>
-                      <td className="py-2">{s.status || "active"}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+{tab === "supplying" && isPlainUser && (
+  <div className="card flex flex-col gap-4 p-6">
+    <h3 className="text-lg font-bold mb-2">Supplying</h3>
+    <div className="flex gap-4">
+      <button
+        className="btn btn-primary px-4 py-2"
+        onClick={() => navigate("/add-supplier-product")}
+      >
+        ➕ Add Product
+      </button>
+
+      <button
+        className="btn btn-secondary px-4 py-2"
+        onClick={() => navigate("/supplier-products")}
+      >
+        📦 View Products
+      </button>
+    </div>
+  </div>
+)}
+
 
         {/* Settings */}
         {tab === "settings" && (

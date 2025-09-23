@@ -138,10 +138,14 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+  if (tab === "users") {
     loadUsers();
+  }
+  if (tab === "roles") {
     loadRoles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
+}, [tab, token]);  // reruns whenever tab or token changes
+
 
   // ---------------- Profile ----------------
   const initials = (user?.name || "A")
@@ -582,7 +586,7 @@ export default function AdminDashboard() {
 
           {/* NEW: Suppliers */}
           <button
-           onClick={() => navigate("/supplier-products")}
+           onClick={() => navigate("/admin-supplier-product")}
            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10"
 >
             <span>🤝</span>

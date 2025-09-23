@@ -17,6 +17,7 @@ import FinanceDashboard from "./components/Dashboard/FinanceDashboard";
 import SalesDashboard from "./components/Dashboard/SalesDashboard";
 import InventoryDashboard from "./components/Dashboard/InventoryDashboard";
 import AdminDashboard from "./components/Admin/AdminDashboard";
+import CustomerDashboard from "./components/Dashboard/CustomerDashboard";
 
 import Home from "./components/Basics/Home";
 import Header from "./components/Basics/Header";
@@ -47,7 +48,7 @@ function GuestRoute({ children }) {
     // logged-in users can't access login/register
     if (user.role === "admin") return <Navigate to="/AdminDashboard" replace />;
     if (user.role === "supplier") return <Navigate to="/SalesDashboard" replace />;
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/CustomerDashboard" replace />;
   }
 
   return children;
@@ -107,6 +108,12 @@ function App() {
             </PrivateRoute>
           }/>
 
+          <Route path="/CustomerDashboard" element={
+            <PrivateRoute roles={["user"]}>
+              <CustomerDashboard/>
+            </PrivateRoute>
+          }/>
+
           <Route path="/AdminDashboard" element={
             <PrivateRoute roles={["admin"]}>
               <AdminDashboard/>
@@ -115,12 +122,12 @@ function App() {
 
           {/* Supplier routes */}
           <Route path="/supplier-products" element={
-            <PrivateRoute roles={["supplier", "admin"]}>
+            <PrivateRoute roles={["user" ,"supplier", "admin"]}>
               <SupplierProductList />
             </PrivateRoute>
           }/>
           <Route path="/add-supplier-product" element={
-            <PrivateRoute roles={["supplier", "admin"]}>
+            <PrivateRoute roles={["user" ,"supplier", "admin"]}>
               <SupplierProductForm />
             </PrivateRoute>
           }/>
@@ -170,27 +177,6 @@ function App() {
 /* ---------------- Conditional Navigation Buttons ---------------- */
 function RoleButtons() {
   const { user } = useAuth();
-
-  if (!user) return null; // hide if not logged in
-
-  return (
-    <div className="user-btn-container">
-      {user.role === "user" && (
-        <Link to="/customer-products"><button className="user-btn">User</button></Link>
-      )}
-      {user.role === "supplier" && (
-        <Link to="/supplier-products"><button className="supplier-btn">Supplier</button></Link>
-      )}
-      {user.role === "admin" && (
-        <>
-          <Link to="/admin-supplier-product"><button className="admin-supplier-btn">Admin-Supplier</button></Link>
-          <Link to="/add-product"><button className="add-product-btn">Admin-Add-Product</button></Link>
-          <Link to="/add-supplier-product"><button className="add-product-btn">Admin-Form</button></Link>
-          <Link to="/products"><button className="add-product-btn">Admin-list</button></Link>
-        </>
-      )}
-    </div>
-  );
 }
 
 export default App;
