@@ -1,0 +1,67 @@
+.auth-wrap { min-height: calc(100vh - 72px); display:flex; align-items:center; justify-content:center; padding:32px 16px; background:#f8fafc; }
+.auth-card { width:100%; max-width:480px; background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.06); }
+.auth-card h2 { margin:0 0 6px; font-size:1.8rem; font-weight:900; color:#111827; }
+.muted { color:#6b7280; margin:0 0 16px; } .center { text-align:center; }
+.alert { background:#fff4f4; color:#b42318; border:1px solid #f1aeb5; padding:10px 12px; border-radius:10px; margin-bottom:12px; }
+label { display:block; font-weight:700; color:#374151; margin:14px 0 6px; }
+input[type="text"],input[type="email"],input[type="password"],input[type="number"]{ width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; outline:none; transition:border-color .15s,box-shadow .15s; }
+input:focus{ border-color:#0d6efd; box-shadow:0 0 0 3px rgba(13,110,253,.15); }
+.invalid{ border-color:#ef4444 !important; } .error{ display:block; color:#b91c1c; margin-top:6px; }
+.checkbox{ display:flex; align-items:center; gap:10px; margin:12px 0; } .checkbox input{ transform:scale(1.1); }
+.row{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.link{ color:#0d6efd; text-decoration:none; } .link:hover{ text-decoration:underline; }
+.btn-primary{ background:#0d6efd; color:#fff; border:none; border-radius:12px; padding:12px 18px; font-weight:800; cursor:pointer; transition:filter .2s, transform .1s; }
+.btn-primary:hover{ filter:brightness(0.95); } .btn-primary:active{ transform:translateY(1px); } .wide{ width:100%; margin-top:14px; }
+.pwd-field{ position:relative; } .icon-btn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer; font-size:18px; }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; } @media (max-width:520px){ .grid2{ grid-template-columns:1fr; } }
+/* Alias so Login.js using "small" still works the same as your ".muted" */
+.small { color:#6b7280; margin:0 0 16px; }
+
+/* Center helper works together with .small/.muted */
+.small.center, .muted.center { text-align:center; display:block; }
+
+/* --------------------------- Dark mode overrides --------------------------- */
+/* The AuthContext adds `dark` on <html>, so target html.dark ... */
+html.dark .auth-wrap{
+  background:#0b1220; /* page bg in dark */
+}
+
+html.dark .auth-card{
+  background:#0f172a;             /* panel bg */
+  border-color:rgba(255,255,255,.08);
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+}
+
+html.dark .auth-card h2{ color:#e5e7eb; }
+html.dark .muted, html.dark .small{ color:#94a3b8; }
+html.dark label{ color:#e5e7eb; }
+
+/* Inputs */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"]{
+  background:#0b1220;
+  border-color:rgba(255,255,255,.1);
+  color:#e5e7eb;
+}
+html.dark input::placeholder{ color:#94a3b8; }
+
+/* Focus ring keeps your brand color */
+html.dark input:focus{
+  border-color:#3b82f6;            /* feel free to keep #0d6efd */
+  box-shadow:0 0 0 3px rgba(59,130,246,.25);
+}
+
+/* Primary button in dark */
+html.dark .btn-primary{
+  background:#3b82f6;              /* readable on dark bg */
+  color:#fff;
+}
+
+/* Error alert on dark */
+html.dark .alert{
+  background:rgba(239,68,68,.12);
+  color:#fecaca;
+  border-color:rgba(239,68,68,.35);
+}

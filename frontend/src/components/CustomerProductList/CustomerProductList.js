@@ -1,5 +1,7 @@
+// src/components/CustomerProductList/CustomerProductList.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ import auth
 import "./CustomerProductList.css";
 
 function CustomerProductList() {
@@ -7,9 +9,10 @@ function CustomerProductList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState(""); 
   const navigate = useNavigate();
+  const { user } = useAuth(); // ✅ get logged-in user
 
   useEffect(() => {
-    fetch("http://localhost:5000/products") 
+    fetch("http://localhost:5000/products")
       .then(async (res) => {
         if (!res.ok) {
           const errMsg = await res.json();
@@ -25,24 +28,24 @@ function CustomerProductList() {
     .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
       switch (sortOrder) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "brand-asc":
-          return (a.brand || "").localeCompare(b.brand || "");
-        case "brand-desc":
-          return (b.brand || "").localeCompare(a.brand || "");
-        case "category-asc":
-          return (a.category || "").localeCompare(b.category || "");
-        case "category-desc":
-          return (b.category || "").localeCompare(a.category || "");
-        default:
-          return 0;
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "brand-asc": return (a.brand || "").localeCompare(b.brand || "");
+        case "brand-desc": return (b.brand || "").localeCompare(a.brand || "");
+        case "category-asc": return (a.category || "").localeCompare(b.category || "");
+        case "category-desc": return (b.category || "").localeCompare(a.category || "");
+        default: return 0;
       }
     });
+
   const handleAddToCart = (product) => {
-    alert(`${product.name} added to cart!`);
+    if (!user) {
+      alert("You need to sign in to add items to the cart.");
+      navigate("/login");
+      return;
+    }
+    alert(`${product.name} added to cart!`); 
+    // TODO: replace with real API call to add to cart
   };
 
   const goToCart = () => {
@@ -51,10 +54,12 @@ function CustomerProductList() {
 
   return (
     <div className="product-list-container">
-      {/* Cart Button */}
-      <button className="cart-btn" onClick={goToCart}>
-        🛒 Cart
-      </button>
+      {/* ✅ Cart Button only for logged-in users */}
+      {user && (
+        <button className="cart-btn" onClick={goToCart}>
+          🛒 Cart
+        </button>
+      )}
 
       <h2>Products</h2>
 
@@ -102,13 +107,18 @@ function CustomerProductList() {
               )}
 
               <div className="product-actions">
-                {p.inStock && p.stockAmount > 0 ? (
+                {/* ✅ Add to Cart only if logged-in */}
+                {user && p.inStock && p.stockAmount > 0 ? (
                   <button onClick={() => handleAddToCart(p)}>Add to Cart</button>
                 ) : (
-                  <button disabled style={{ background: "#ccc", cursor: "not-allowed" }}>
-                    Out of Stock
+                  <button
+                    disabled
+                    style={{ background: "#ccc", cursor: "not-allowed" }}
+                  >
+                    {user ? "Out of Stock" : "Login to Add"}
                   </button>
                 )}
+
                 <button
                   onClick={() => navigate(`/product/${p._id}`)}
                   style={{ marginLeft: "10px", background: "#2563eb", color: "white" }}

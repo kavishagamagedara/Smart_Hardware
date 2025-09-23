@@ -1,9 +1,26 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Header.css";
 
 function Header() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // ✅ get logged-in user
+
+  const handleDashboardRedirect = () => {
+    if (!user) {
+      navigate("/login"); // just in case
+      return;
+    }
+
+    if (user.role === "admin") {
+      navigate("/AdminDashboard");
+    } else if (user.role === "supplier") {
+      navigate("/SalesDashboard");
+    } else {
+      navigate("/dashboard"); // default for normal users
+    }
+  };
 
   return (
     <header className="header">
@@ -19,9 +36,12 @@ function Header() {
         <a href="/">Home</a>
       </nav>
 
-      <button className="btn-primary" onClick={() => navigate("/login")}>
-        Get in touch
-      </button>
+      {/* ✅ Show button only if user exists */}
+      {user && (
+        <button className="btn-primary" onClick={handleDashboardRedirect}>
+          Get in touch
+        </button>
+      )}
     </header>
   );
 }

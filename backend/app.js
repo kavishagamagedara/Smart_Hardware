@@ -6,6 +6,8 @@ const path = require("path");
 
 const productRouter = require("./Route/ProductRoute");
 const supplierProductRouter = require("./Route/SupplierProductRoute");
+const userRouter = require("./Route/UserRoute");
+const RoleRoute = require("./Route/RoleRoute");
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Routes
 app.use("/products", productRouter);
 app.use("/supplierProducts", supplierProductRouter);
+app.use("/users", userRouter);
+app.use("/roles", RoleRoute);
 
 // Root test endpoint
 app.get("/", (req, res) => {
