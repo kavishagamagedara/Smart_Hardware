@@ -27,7 +27,7 @@ export default function Signup() {
         name: form.name, email: form.email, password: form.password,
         age: form.age ? Number(form.age) : undefined, address: form.address || undefined
       });
-      navigate("/dashboard");
+      navigate("/CustomerDashboard");
     } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
   };
 
