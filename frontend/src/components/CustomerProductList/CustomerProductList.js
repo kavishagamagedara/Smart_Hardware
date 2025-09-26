@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // ✅ import auth
 import "./CustomerProductList.css";
+import { useContext } from "react";
+import { CartContext } from "../Order/Customer/CartContext";
 
 function CustomerProductList() {
   const [products, setProducts] = useState([]);
@@ -38,18 +40,20 @@ function CustomerProductList() {
       }
     });
 
+  const { addToCart } = useContext(CartContext);
+
   const handleAddToCart = (product) => {
     if (!user) {
       alert("You need to sign in to add items to the cart.");
       navigate("/login");
       return;
     }
-    alert(`${product.name} added to cart!`); 
-    // TODO: replace with real API call to add to cart
+    addToCart(product);   // ✅ actually add product to cart
+    alert(`${product.name} added to cart!`);
   };
 
   const goToCart = () => {
-    navigate("/cart");
+    navigate("/customercart");
   };
 
   return (

@@ -149,20 +149,29 @@ export default function CustomerDashboard() {
         {/* Orders */}
         {tab === "orders" && (
           <div className="card overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead><tr><th>#</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
-              <tbody>
-                {userOrders.length === 0 ? <tr><td colSpan={4}>No orders</td></tr> :
-                  userOrders.map(o => (
-                    <tr key={o._id}>
-                      <td>{o.number}</td>
-                      <td>{new Date(o.date).toLocaleDateString()}</td>
-                      <td>{o.status}</td>
-                      <td>{o.total}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            <div className="card overflow-x-auto p-4 flex flex-col gap-4">
+  <button
+    className="bg-blue-500 text-white px-4 py-2 rounded"
+    onClick={() => navigate("/customer-products")}
+  >
+    Place Order
+  </button>
+
+  <button
+    className="bg-green-500 text-white px-4 py-2 rounded"
+    onClick={() => navigate("/CustomerOrders")}
+  >
+    View My Orders
+  </button>
+
+  <button
+    className="bg-red-500 text-white px-4 py-2 rounded"
+    onClick={() => navigate("/CancelledOrders")}
+  >
+    Cancelled Orders
+  </button>
+</div>
+
           </div>
         )}
 

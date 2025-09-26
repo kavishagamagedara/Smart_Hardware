@@ -25,8 +25,12 @@ export default function Login() {
 
     try {
       setBusy(true);
-      const user = await login(form.email, form.password);
+      const { user, token } = await login(form.email, form.password);
 
+      // ✅ Save token in localStorage
+      localStorage.setItem("token", token);
+
+      // Redirect based on role
       if (user.role === "admin") navigate("/AdminDashboard");
       else if (user.role === "supplier") navigate("/dashboard");
       else navigate("/CustomerDashboard");

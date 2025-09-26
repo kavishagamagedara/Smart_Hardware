@@ -575,6 +575,15 @@ export default function AdminDashboard() {
             <span className="font-semibold">Product Management</span>
           </button>
           <button
+            onClick={() => setTabAndHash("order")}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl ${
+              tab === "product" ? "bg-brand-600 text-white" : "hover:bg-slate-100 dark:hover:bg-white/10"
+            }`}
+          >
+            <span>📦</span>
+            <span className="font-semibold">Order Management</span>
+          </button>
+          <button
             onClick={() => setTabAndHash("feedback")}
             className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl ${
               tab === "feedback" ? "bg-brand-600 text-white" : "hover:bg-slate-100 dark:hover:bg-white/10"
@@ -650,6 +659,8 @@ export default function AdminDashboard() {
               ? "Roles & privileges"
               : tab === "product"
               ? "Product Management"
+              : tab === "order"
+              ? "Order Management"
               : tab === "feedback"
               ? "Feedback & Reviews"
               : tab === "suppliers"
@@ -945,6 +956,33 @@ export default function AdminDashboard() {
                   onClick={() => navigate("/admin-supplier-product")}
             >
                 🛒 View Supplier Product List
+              </button>
+            </div>
+        </div>
+        )}
+
+        {tab === "order" && (
+        <div className="card flex flex-col gap-4 p-6">
+            <h3 className="text-lg font-bold mb-2">Product Management</h3>
+            <div className="flex gap-4">
+              <button
+                className="btn btn-primary px-4 py-2"
+                onClick={() => navigate("/CustomerOrders")}
+              >
+             Customer Orders
+               </button>
+                <button
+                  className="btn btn-secondary px-4 py-2"
+                  onClick={() => navigate("/admin-supplier-product") }
+                >
+              Orders Made for Suppliers
+              </button>
+
+              <button
+                  className="btn btn-accent px-4 py-2"
+                  onClick={() => navigate("/CancelledOrders")}
+            >
+              View Cancelled Orders
               </button>
             </div>
         </div>

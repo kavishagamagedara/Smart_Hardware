@@ -1,0 +1,95 @@
+.orders-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.search-bar button {
+  padding: 8px 16px;
+  background-color: #0b74ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.search-bar button:hover {
+  background-color: #095dc1;
+}
+
+.sort-dropdown {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+.sort-dropdown select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-dropdown select:hover {
+  border-color: #0b74ff;
+}
+
+.sort-dropdown select:focus {
+  outline: none;
+  border-color: #0b74ff;
+  box-shadow: 0 0 5px rgba(11, 116, 255, 0.5);
+}
+
+.order-card {
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background-color: #fff;
+}
+
+.order-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.order-buttons button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.order-buttons button:hover {
+  opacity: 0.9;
+}
+
+.cancel-btn {
+  background-color: red;
+  color: white;
+}

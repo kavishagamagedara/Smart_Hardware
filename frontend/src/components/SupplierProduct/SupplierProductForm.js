@@ -12,8 +12,11 @@ function SupplierProductForm() {
   });
 
   const handleChange = (e) => {
-    if (e.target.name === "image") setFormData({ ...formData, image: e.target.files[0] });
-    else setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === "image") {
+      setFormData({ ...formData, image: e.target.files[0] });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -27,13 +30,21 @@ function SupplierProductForm() {
     data.append("image", formData.image);
 
     try {
-      const res = await fetch("http://localhost:5000/SupplierProducts", { method: "POST", body: data });
+      const token = localStorage.getItem("token"); // ✅ attach JWT if required
+      const res = await fetch("http://localhost:5000/SupplierProducts", {
+        method: "POST",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+        body: data,
+      });
+
       const result = await res.json();
       if (res.ok) {
         alert("Supplier product added successfully!");
         navigate("/supplier-products");
       } else {
-        alert(result.message);
+        alert(result.message || "Failed to add product");
       }
     } catch (err) {
       console.error(err);
@@ -43,10 +54,56 @@ function SupplierProductForm() {
 
   return (
     <form onSubmit={handleSubmit} className="supplier-form">
-      <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
-      <input type="number" name="price" placeholder="Price" value={formData.price} onChange={handleChange} required />
-      <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} required />
-      <input type="file" name="image" accept="image/*" onChange={handleChange} required />
+      <div className="form-group">
+        <label htmlFor="name">Product Name</label>
+        <input
+          id="name"
+          type="text"
+          name="name"
+          placeholder="Enter product name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="price">Price</label>
+        <input
+          id="price"
+          type="number"
+          name="price"
+          placeholder="Enter price"
+          value={formData.price}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Enter description"
+          value={formData.description}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="image">Upload Product Image</label>
+        <input
+          id="image"
+          type="file"
+          name="image"
+          accept="image/*"
+          onChange={handleChange}
+          required
+        />
+      </div>
+
       <button type="submit">Add Supplier Product</button>
     </form>
   );

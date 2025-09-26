@@ -1,0 +1,90 @@
+.checkout-page {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.checkout-page h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: #333;
+}
+
+.checkout-page div {
+  margin-bottom: 15px;
+}
+
+.checkout-page label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #444;
+}
+
+.checkout-page input,
+.checkout-page select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.checkout-page input:focus,
+.checkout-page select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+}
+
+.checkout-page h3 {
+  margin-top: 25px;
+  font-size: 22px;
+  color: #222;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
+.checkout-page p {
+  font-size: 16px;
+  color: #555;
+  margin: 8px 0;
+}
+
+.checkout-page button {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.checkout-page button:hover {
+  background-color: #218838;
+}
+
+@media (max-width: 600px) {
+  .checkout-page {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .checkout-page h2 {
+    font-size: 24px;
+  }
+
+  .checkout-page h3 {
+    font-size: 20px;
+  }
+}

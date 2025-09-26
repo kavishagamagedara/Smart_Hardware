@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./SupplierProductList.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";  // ✅ added
 
 function SupplierProductList() {
   const [products, setProducts] = useState([]);
@@ -9,26 +10,33 @@ function SupplierProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { token } = useAuth();   // ✅ get token
 
   useEffect(() => {
-    fetch("http://localhost:5000/SupplierProducts/") 
-      .then(async (res) => {
+    const loadProducts = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/SupplierProducts/", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",  // ✅ attach token
+          },
+        });
         if (!res.ok) {
           const errMsg = await res.json();
           throw new Error(errMsg.message || "Failed to fetch products");
         }
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         setProducts(data);
         setError("");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching supplier products:", err);
         setError(err.message);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) loadProducts(); // ✅ only call if logged in
+  }, [token]);
 
   const filteredProducts = products
     .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -45,12 +53,16 @@ function SupplierProductList() {
     try {
       const res = await fetch(`http://localhost:5000/SupplierProducts/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",  // ✅ attach token
+        },
       });
       if (res.ok) {
         setProducts(products.filter((p) => p._id !== id));
         alert("Product deleted successfully!");
       } else {
-        alert("Failed to delete product.");
+        const errMsg = await res.json();
+        alert(errMsg.message || "Failed to delete product.");
       }
     } catch (err) {
       console.error("Error deleting product:", err);
