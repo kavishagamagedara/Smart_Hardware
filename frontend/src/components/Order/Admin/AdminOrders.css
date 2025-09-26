@@ -1,0 +1,111 @@
+/* AdminOrders.css */
+
+/* Page container */
+.admin-orders-page {
+  padding: 30px;
+  background: #f9f9fb;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Heading */
+.admin-orders-page h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #111827;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Table styling */
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid #e6e9ef;
+}
+
+.orders-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.orders-table td {
+  font-size: 15px;
+  color: #374151;
+}
+
+/* Hover row effect */
+.orders-table tr:hover {
+  background: #f9fafb;
+  transition: background 0.2s ease-in-out;
+}
+
+/* Status column */
+.orders-table td:nth-child(4) {
+  font-weight: 600;
+  color: #0b74ff;
+}
+
+/* Buttons */
+.update-btn,
+.cancel-btn {
+  padding: 8px 14px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  margin-right: 8px;
+}
+
+/* Update button */
+.update-btn {
+  background: #0b74ff;
+  color: white;
+}
+
+.update-btn:hover {
+  background: #065ad8;
+}
+
+/* Cancel button */
+.cancel-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #dc2626;
+}
+
+/* Items list inside a cell */
+.orders-table td div {
+  background: #f3f4f6;
+  padding: 4px 8px;
+  margin: 3px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+}
+
+/* Loading & empty messages */
+.admin-orders-page p {
+  text-align: center;
+  font-size: 16px;
+  color: #6b7280;
+  margin-top: 20px;
+}

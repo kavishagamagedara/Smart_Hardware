@@ -1,0 +1,65 @@
+.cancelled-orders-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.cancelled-orders-container h2 {
+  text-align: center;
+  color: #d9534f; /* Red for cancelled orders */
+  margin-bottom: 20px;
+}
+
+.no-orders {
+  text-align: center;
+  font-size: 18px;
+  color: #555;
+}
+
+.order-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+.order-card:hover {
+  transform: scale(1.02);
+}
+
+.order-card p {
+  margin: 6px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.order-card strong {
+  color: #000;
+}
+
+.items-list {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+.items-list li {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+.loading,
+.error {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+}
+
+.error {
+  color: #d9534f;
+  font-weight: bold;
+}

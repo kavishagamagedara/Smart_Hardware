@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./UpdateSupplierProduct.css";
+import { useAuth } from "../context/AuthContext";  // ✅ import auth
 
 function UpdateSupplierProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { token } = useAuth();  // ✅ get token
 
   const [product, setProduct] = useState({
     name: "",
@@ -15,11 +17,16 @@ function UpdateSupplierProduct() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/SupplierProducts/${id}`)
+    if (!token) return; // wait until logged in
+    fetch(`http://localhost:5000/SupplierProducts/${id}`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",  // ✅ attach token
+      },
+    })
       .then((res) => res.json())
       .then((data) => setProduct({ ...data, image: null, imageUrl: data.imageUrl || "" }))
       .catch((err) => console.error("Error fetching product:", err));
-  }, [id]);
+  }, [id, token]);
 
   const handleChange = (e) => {
     if (e.target.type === "file") setProduct({ ...product, image: e.target.files[0] });
@@ -37,6 +44,9 @@ function UpdateSupplierProduct() {
     try {
       const res = await fetch(`http://localhost:5000/SupplierProducts/${id}`, {
         method: "PUT",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",  // ✅ attach token
+        },
         body: data,
       });
       const result = await res.json();

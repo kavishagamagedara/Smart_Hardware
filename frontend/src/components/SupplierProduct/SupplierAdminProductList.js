@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import "./SupplierProductList.css";
 import { useNavigate } from "react-router-dom";
+import { AdminCartContext } from "../Order/Admin/AdminCartContext";
 
 function SupplierAdminProductList() {
   const [products, setProducts] = useState([]);
@@ -10,8 +11,16 @@ function SupplierAdminProductList() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // ✅ Cart Context
+  const { addToCart } = useContext(AdminCartContext);
+
   useEffect(() => {
-    fetch("http://localhost:5000/SupplierProducts/") 
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5000/SupplierProducts/", {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    })
       .then(async (res) => {
         if (!res.ok) {
           const errMsg = await res.json();
@@ -30,7 +39,6 @@ function SupplierAdminProductList() {
       .finally(() => setLoading(false));
   }, []);
 
-  //Filter, sort
   const filteredProducts = products
     .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
@@ -64,7 +72,6 @@ function SupplierAdminProductList() {
         {filteredProducts.length > 0 ? (
           filteredProducts.map((p) => (
             <div key={p._id} className="product-card">
-              
               <img
                 src={p.imageUrl.startsWith("http") ? p.imageUrl : `http://localhost:5000${p.imageUrl}`}
                 alt={p.name}
@@ -73,7 +80,21 @@ function SupplierAdminProductList() {
               <p><strong>Price:</strong> ${p.price}</p>
               <p>{p.description}</p>
               <div className="product-actions">
-                <button onClick={() => navigate("")}>Add to Cart</button>
+                {/* ✅ Add to Cart button */}
+                <button
+                  onClick={() =>
+                    addToCart({
+                      id: p._id,
+                      name: p.name,
+                      price: p.price,
+                      img: p.imageUrl,
+                      quantity: 1,
+                    })
+                  }
+                >
+                  Add to Cart
+                </button>
+
                 <button
                   onClick={() => navigate(`/supplier-admin-product/${p._id}`)}
                   style={{ marginLeft: "10px", background: "#2563eb", color: "white" }}
@@ -86,6 +107,13 @@ function SupplierAdminProductList() {
         ) : (
           <p>No supplier products found.</p>
         )}
+      </div>
+
+      {/* ✅ Cart Button */}
+      <div className="cart-button">
+        <button onClick={() => navigate("/AdminCart")}>
+          Go to Cart
+        </button>
       </div>
     </div>
   );

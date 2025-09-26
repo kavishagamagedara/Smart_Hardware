@@ -8,21 +8,44 @@ const productRouter = require("./Route/ProductRoute");
 const supplierProductRouter = require("./Route/SupplierProductRoute");
 const userRouter = require("./Route/UserRoute");
 const RoleRoute = require("./Route/RoleRoute");
+const orderRoute = require("./Route/orderRoute");
+const adminorderRoute = require("./Route/adminOrderRoute");
+const ReviewRoutes = require("./Route/ReviewRoutes");
+const paymentRoute = require("./Route/paymentRoute");
+
+// ✅ Stripe webhook controller
+const { stripeWebhook } = require("./Controlers/paymentController");
 
 const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:3000" })); // frontend
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 // ✅ Serve uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ------------------ Stripe webhook (raw body required) ------------------
+// This **must** be before express.json()
+app.post(
+  "/api/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  (req, _res, next) => {
+    req.rawBody = req.body; // Stripe requires raw buffer
+    next();
+  },
+  stripeWebhook
+);
 
 // Routes
 app.use("/products", productRouter);
 app.use("/supplierProducts", supplierProductRouter);
 app.use("/users", userRouter);
 app.use("/roles", RoleRoute);
+app.use("/api/orders", orderRoute);
+app.use("/api/admin-orders", adminorderRoute);
+app.use("/feedback", ReviewRoutes);
+app.use("/api/payments", paymentRoute);
 
 // Root test endpoint
 app.get("/", (req, res) => {
@@ -37,3 +60,5 @@ mongoose
     app.listen(5000, () => console.log("Server running on port 5000"));
   })
   .catch((err) => console.error("MongoDB connection error:", err));
+
+module.exports = app;

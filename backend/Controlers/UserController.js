@@ -44,10 +44,13 @@ const login = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
-    // 🔹 Always use "sub"
-    const token = jwt.sign({ sub: user._id, role: user.role }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // ✅ Use "id" instead of "sub"
+const token = jwt.sign(
+  { id: user._id, role: user.role, email: user.email },
+  JWT_SECRET,
+  { expiresIn: "7d" }
+);
+
     const payload = await attachPerms(user);
 
     res.json({ user: payload, token });
@@ -76,7 +79,7 @@ const createUser = async (req, res) => {
       const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : null;
       if (token) {
         const payload = jwt.verify(token, JWT_SECRET);
-        const caller = await User.findById(payload.sub);
+        const caller = await User.findById(payload.id);
         callerIsAdmin = (caller?.role || "").toLowerCase() === "admin";
       }
     } catch {

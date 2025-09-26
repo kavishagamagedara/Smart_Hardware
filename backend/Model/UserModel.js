@@ -9,9 +9,8 @@ const userSchema = new mongoose.Schema(
     age:      { type: Number },
     address:  { type: String },
 
-    // role + granular permissions
-    role:        { type: String, default: "user" },         // "user" | "admin" | "staff" | etc.
-    permissions: { type: [String], default: [] },           // e.g. ["manage_users","edit_inventory"]
+    role:        { type: String, default: "user" },        
+    permissions: { type: [String], default: [] },         
 
     avatar:   { type: String, default: "" }
   },

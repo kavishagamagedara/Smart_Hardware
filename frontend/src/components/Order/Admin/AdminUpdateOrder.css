@@ -1,0 +1,79 @@
+/* Container for the whole form */
+.update-order-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+/* Page heading */
+.update-order-container h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #0b74ff;
+}
+
+/* Each item block */
+.item-block {
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background-color: #f9f9f9;
+}
+
+/* Labels */
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* Input fields */
+input[type="number"],
+select {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* Button */
+button[type="submit"] {
+  background-color: #0b74ff;
+  color: white;
+  font-weight: bold;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for button */
+button[type="submit"]:hover {
+  background-color: #095ac2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .update-order-container {
+    padding: 15px;
+  }
+
+  input[type="number"],
+  select {
+    font-size: 14px;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+  }
+}

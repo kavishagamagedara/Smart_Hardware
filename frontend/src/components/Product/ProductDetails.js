@@ -38,7 +38,7 @@ function ProductDetails() {
           <button onClick={() => navigate(-1)} className="btn-back">
             Back
           </button>
-          <button onClick={() => navigate("")} className="btn-back">
+          <button onClick={() => navigate("/ProductReviews")} className="btn-back">
             View Reviews
           </button>
         </div>
