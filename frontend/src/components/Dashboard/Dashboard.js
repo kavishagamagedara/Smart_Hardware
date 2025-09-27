@@ -725,35 +725,25 @@ export default function Dashboard() {
 
         {/* Plain user: My Orders */}
         {tab === "orders" && isPlainUser && (
-          <div className="card overflow-x-auto">
-            <table className="min-w-[720px] w-full">
-              <thead>
-                <tr className="text-left">
-                  <th>#</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-500">No orders yet</td>
-                  </tr>
-                ) : (
-                  userOrders.map((o) => (
-                    <tr key={o._id} className="border-t border-white/10">
-                      <td>{o.number || o._id?.slice?.(-6)}</td>
-                      <td>{o.date ? new Date(o.date).toLocaleDateString() : "-"}</td>
-                      <td>{o.status || "-"}</td>
-                      <td>${o.total?.toFixed?.(2) ?? o.total ?? "-"}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+  <div>
+    {/* ✅ Buttons above table */}
+    <div className="mb-4 flex gap-3">
+      <button
+        onClick={() => navigate("/ReceivedOrders")}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Received Orders
+      </button>
+      <button
+        onClick={() => navigate("/CompletedOrders")}
+        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+      >
+        Completed Orders
+      </button>
+    </div>
+  </div>
+)}
+
 
         {/* Plain user: My Feedback */}
         {tab === "myfeedback" && isPlainUser && (

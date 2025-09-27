@@ -973,7 +973,7 @@ export default function AdminDashboard() {
                </button>
                 <button
                   className="btn btn-secondary px-4 py-2"
-                  onClick={() => navigate("/admin-supplier-product") }
+                  onClick={() => navigate("/AdminOrders") }
                 >
               Orders Made for Suppliers
               </button>

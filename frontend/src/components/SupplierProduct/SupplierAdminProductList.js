@@ -16,7 +16,7 @@ function SupplierAdminProductList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/SupplierProducts/", {
+    fetch("http://localhost:5000/supplierProducts", {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },
@@ -73,31 +73,48 @@ function SupplierAdminProductList() {
           filteredProducts.map((p) => (
             <div key={p._id} className="product-card">
               <img
-                src={p.imageUrl.startsWith("http") ? p.imageUrl : `http://localhost:5000${p.imageUrl}`}
+                src={
+                  p.imageUrl?.startsWith("http")
+                    ? p.imageUrl
+                    : `http://localhost:5000${p.imageUrl}`
+                }
                 alt={p.name}
               />
               <h3>{p.name}</h3>
-              <p><strong>Price:</strong> ${p.price}</p>
+              <p>
+                <strong>Price:</strong> ${p.price}
+              </p>
               <p>{p.description}</p>
               <div className="product-actions">
-                {/* ✅ Add to Cart button */}
+                {/* ✅ Always push productId */}
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    console.log("🛒 Adding to cart:", {
+                      productId: p._id,
+                      name: p.name,
+                      price: p.price,
+                      supplierId: p.supplierId,
+                    });
                     addToCart({
-                      id: p._id,
+                      productId: p._id, // ✅ normalized
                       name: p.name,
                       price: p.price,
                       img: p.imageUrl,
+                      supplierId: p.supplierId,
                       quantity: 1,
-                    })
-                  }
+                    });
+                  }}
                 >
                   Add to Cart
                 </button>
 
                 <button
                   onClick={() => navigate(`/supplier-admin-product/${p._id}`)}
-                  style={{ marginLeft: "10px", background: "#2563eb", color: "white" }}
+                  style={{
+                    marginLeft: "10px",
+                    background: "#2563eb",
+                    color: "white",
+                  }}
                 >
                   View Details
                 </button>
@@ -111,9 +128,7 @@ function SupplierAdminProductList() {
 
       {/* ✅ Cart Button */}
       <div className="cart-button">
-        <button onClick={() => navigate("/AdminCart")}>
-          Go to Cart
-        </button>
+        <button onClick={() => navigate("/AdminCart")}>Go to Cart</button>
       </div>
     </div>
   );

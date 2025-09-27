@@ -15,27 +15,38 @@ function AdminOrders() {
   const location = useLocation();
 
   // Fetch orders
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/admin-orders");
-      const data = await response.json();
+  // Fetch orders
+// Fetch orders
+const fetchOrders = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ get token
+    const response = await fetch("http://localhost:5000/api/admin-orders", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "", // ✅ send token
+      },
+    });
 
-      let ordersData = [];
-      if (Array.isArray(data.orders)) {
-        ordersData = data.orders;
-      } else if (Array.isArray(data)) {
-        ordersData = data;
-      }
-
-      setOrders(ordersData);
-      setAllOrders(ordersData);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-      alert("Error connecting to server.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch orders: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+
+    // ✅ Backend already sends an array
+    const ordersData = Array.isArray(data) ? data : [];
+
+    setOrders(ordersData);
+    setAllOrders(ordersData);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    alert("Error connecting to server.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     fetchOrders();
