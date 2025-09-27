@@ -11,6 +11,7 @@ function AdminCheckout() {
 
   const [contact, setContact] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash Payment");
+  const [slip, setSlip] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -26,41 +27,47 @@ function AdminCheckout() {
 
     setLoading(true);
 
-    const orderItems = itemsFromCart.map(item => ({
-      productId: item.id, // backend expects productId
-      quantity: item.quantity,
-      price: item.price,
-    }));
+    // ✅ Prepare form data
+    const formData = new FormData();
+    formData.append("contact", contact);
+    formData.append("paymentMethod", paymentMethod);
+    formData.append("totalCost", subtotalFromCart);
+    formData.append("status", "Pending");
+    formData.append("items", JSON.stringify(itemsFromCart)); // pass as-is
 
-    const orderData = {
-      items: orderItems,
-      totalAmount: subtotalFromCart,
-      paymentMethod,
+    if (paymentMethod === "Bank Transfer" && slip) {
+      formData.append("slip", slip); // ✅ attach slip
+    }
+
+    console.log("🛒 Final payload to backend:", {
       contact,
-      status: "Pending",
-    };
+      paymentMethod,
+      totalCost: subtotalFromCart,
+      items: itemsFromCart,
+      slip: slip ? slip.name : "none",
+    });
 
     try {
-      const token = localStorage.getItem("token"); // ✅ Include admin token
-      const response = await fetch("http://localhost:5000/api/orders/admin", {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/admin-orders", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": token ? `Bearer ${token}` : "",
+          Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify(orderData),
+        body: formData,
       });
 
       const result = await response.json();
+      console.log("📩 Backend response:", result);
 
       if (response.ok) {
         alert("Order placed successfully!");
-        navigate("/AdminDashboard"); // redirect admin after order
+        navigate("/AdminDashboard");
       } else {
         alert(result.message || "Failed to place order.");
       }
     } catch (err) {
-      console.error("Error placing order:", err);
+      console.error("❌ Error placing order:", err);
       alert("Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -88,6 +95,18 @@ function AdminCheckout() {
           <option value="Cash Payment">Cash Payment</option>
           <option value="Bank Transfer">Bank Transfer</option>
         </select>
+
+        {/* ✅ Slip upload only if Bank Transfer */}
+        {paymentMethod === "Bank Transfer" && (
+          <div>
+            <label>Upload Bank Transfer Slip:</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSlip(e.target.files[0])}
+            />
+          </div>
+        )}
       </div>
 
       <div className="checkout-summary">

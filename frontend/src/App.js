@@ -26,9 +26,11 @@ import CustomerCart from "./components/Order/Customer/Cart";
 import Checkout from "./components/Order/Customer/Checkout";
 import CustomerOrders from "./components/Order/Customer/CustomerOrders";
 import CancelledOrders from "./components/Order/Customer/CancelledOrders";
+import ReceivedOrders from "./components/Order/Supplier/ReceivedOrders";
 
 import AdminCart from "./components/Order/Admin/AdminCart";
 import AdminCheckout from "./components/Order/Admin/AdminCheckout";
+import AdminOrders from "./components/Order/Admin/AdminOrders";
 
 import PaymentSuccess from "./components/payment/PaymentSuccess";
 
@@ -128,6 +130,10 @@ function App() {
               <Route path="/products" element={
                 <PrivateRoute roles={["admin"]}><ProductList /></PrivateRoute>
               } />
+              AdminOrders
+              <Route path="/AdminOrders" element={
+                <PrivateRoute roles={["admin"]}><AdminOrders /></PrivateRoute>
+              } />
               <Route path="/add-product" element={
                 <PrivateRoute roles={["admin"]}><ProductForm /></PrivateRoute>
               } />
@@ -148,8 +154,12 @@ function App() {
               <Route path="/update-supplier-product/:id" element={
                 <PrivateRoute roles={["supplier","admin"]}><UpdateSupplierProduct /></PrivateRoute>
               } />
+              ReceivedOrders
               <Route path="/supplier-admin-product/:id" element={
                 <PrivateRoute roles={["supplier","admin"]}><SupplierProductDetails /></PrivateRoute>
+              } />
+               <Route path="/ReceivedOrders" element={
+                <PrivateRoute roles={["supplier"]}><ReceivedOrders /></PrivateRoute>
               } />
 
               {/* Dashboards */}
