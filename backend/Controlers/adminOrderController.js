@@ -44,6 +44,23 @@ exports.addAdminOrder = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // Decrease stock for each supplier product
+    const SupplierProduct = require("../Model/SupplierProductModel");
+    for (const item of items) {
+      if (item.productId) {
+        const product = await SupplierProduct.findById(item.productId);
+        if (product && typeof item.quantity === 'number') {
+          // If stockAmount exists, decrease it
+          if (typeof product.stockAmount === 'number') {
+            product.stockAmount = Math.max(0, product.stockAmount - item.quantity);
+            product.inStock = product.stockAmount > 0;
+            await product.save();
+          }
+        }
+      }
+    }
+
     res.status(201).json({ message: "Order placed successfully", order: newOrder });
   } catch (err) {
     console.error("Add Admin Order Error:", err);

@@ -27,7 +27,8 @@ function Header() {
     if (!user) return navigate("/login");
     const role = String(user.role || "").toLowerCase();
     const isManager = role.includes("manager") || role.includes("manger");
-    if (role === "admin" || (isManager && !role.includes("care"))) navigate("/AdminDashboard");
+    if (role === "admin" || (isManager && !role.includes("care") && role !== "finance manager")) navigate("/AdminDashboard");
+    else if (role === "finance manager") navigate("/FinanceDashboard");
     else if (role === "customer care manager" || role.includes("care")) navigate("/caredashboard");
     else if (role === "supplier") navigate("/dashboard");
     else navigate("/CustomerDashboard");
