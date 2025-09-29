@@ -54,30 +54,37 @@ const fetchOrders = async () => {
 
   // Cancel order
   const handleCancel = async (id) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+  if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
-    try {
-      const response = await fetch(`http://localhost:5000/api/admin-orders/${id}/cancel`, {
-        method: "PUT",
-      });
-      const data = await response.json();
+  try {
+    const token = localStorage.getItem("token");  // ✅ get token
 
-      if (response.ok) {
-        alert(data.message || "Order cancelled successfully");
-        setOrders((prev) => prev.filter((order) => order._id !== id));
-        setAllOrders((prev) => prev.filter((order) => order._id !== id));
-      } else {
-        alert(data.message || "Failed to cancel order");
-      }
-    } catch (err) {
-      console.error("Error cancelling order:", err);
-      alert("Error cancelling order.");
+    const response = await fetch(`http://localhost:5000/api/admin-orders/${id}/cancel`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "", // ✅ send token
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert(data.message || "Order cancelled successfully");
+      setOrders((prev) => prev.filter((order) => order._id !== id));
+      setAllOrders((prev) => prev.filter((order) => order._id !== id));
+    } else {
+      alert(data.message || "Failed to cancel order");
     }
-  };
+  } catch (err) {
+    console.error("Error cancelling order:", err);
+    alert("Error cancelling order.");
+  }
+};
 
   // Navigate to AdminUpdateOrder.js
   const handleUpdate = (id) => {
-    navigate(`/admin-update-order/${id}`);
+    navigate(`/AdminUpdateOrder/${id}`);
   };
 
   // Deep search function

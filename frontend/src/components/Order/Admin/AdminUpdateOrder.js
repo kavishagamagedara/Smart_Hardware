@@ -12,9 +12,15 @@ function AdminUpdateOrder() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin-orders/${id}`);
+        const token = localStorage.getItem("token"); // ✅ get token
+        const response = await axios.get(`http://localhost:5000/api/admin-orders/${id}`, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
         console.log("Fetched admin order:", response.data);
-        setOrder(response.data.order || null);
+        setOrder(response.data || null);
       } catch (error) {
         console.error("Error fetching admin order:", error);
         alert("Failed to fetch order data.");
@@ -33,24 +39,35 @@ function AdminUpdateOrder() {
   // Send update request
   const sendRequest = async () => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/admin-orders/${id}`, {
-        supplierId: order.supplierId?._id || null,
-        status: order.status,
-        notes: order.notes,
-        items: order.items.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        totalCost: order.items.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        ),
-      });
+      const token = localStorage.getItem("token"); // ✅ get token
+      const response = await axios.put(
+        `http://localhost:5000/api/admin-orders/${id}`,
+        {
+          supplierId: order.supplierId?._id || null,
+          status: order.status,
+          notes: order.notes,
+          items: order.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            supplierId: item.supplierId, // ✅ keep supplierId
+            productId: item.productId,   // ✅ keep productId
+          })),
+          totalCost: order.items.reduce(
+            (acc, item) => acc + item.price * item.quantity,
+            0
+          ),
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
 
       if (response.status === 200) {
         alert("Order updated successfully!"); // ✅ success popup
-        navigate("/admin-orders", { state: { refresh: true } }); // redirect after update
+        navigate("/AdminOrders", { state: { refresh: true } }); // redirect after update
       }
     } catch (error) {
       console.error("Error updating admin order:", error);
@@ -76,10 +93,9 @@ function AdminUpdateOrder() {
 
         <p>
           <strong>Total Cost:</strong> Rs.
-          {order.items.reduce(
-            (acc, item) => acc + item.price * item.quantity,
-            0
-          ).toFixed(2)}
+          {order.items
+            .reduce((acc, item) => acc + item.price * item.quantity, 0)
+            .toFixed(2)}
         </p>
 
         <h3>Items:</h3>

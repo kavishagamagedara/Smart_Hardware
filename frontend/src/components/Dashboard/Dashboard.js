@@ -253,10 +253,21 @@ export default function Dashboard() {
         </div>
 
         <nav className="space-y-2">
+
           <button
-            onClick={() => setTab("dashboard")}
+            onClick={() => {
+              if (isAdmin) {
+                navigate("/admin");
+              } else if (canCare) {
+                navigate("/caredashboard");
+              } else {
+                setTab("dashboard");
+              }
+            }}
             className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl ${
-              tab === "dashboard" ? "bg-brand-600 text-white" : "hover:bg-slate-100 dark:hover:bg-white/10"
+              (tab === "dashboard" || (canCare && window.location.pathname === "/caredashboard") || (isAdmin && window.location.pathname === "/admin"))
+                ? "bg-brand-600 text-white"
+                : "hover:bg-slate-100 dark:hover:bg-white/10"
             }`}
           >
             <span>📊</span>

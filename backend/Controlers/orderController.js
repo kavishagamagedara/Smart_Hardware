@@ -1,25 +1,22 @@
+// controllers/orderController.js
+const mongoose = require("mongoose");              // ✅ ADD THIS
 const Order = require("../Model/orderModel");
 
 /* ------------------- Get all orders ------------------- */
 const getAllOrders = async (req, res) => {
   try {
     let filter = {};
-
-    // Customers see only their own orders
-    if (req.user.role.toLowerCase() === "user") {
+    if ((req.user.role || "").toLowerCase() === "user") {
       filter = { userId: req.user._id };
     }
 
     const orders = await Order.find(filter);
 
-    if (!orders.length) {
-      return res.status(404).json({ message: "No orders found" });
-    }
-
-    res.status(200).json({ orders });
+    // ✅ Always 200; return empty array instead of 404
+    return res.status(200).json({ orders });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching orders", error: err });
+    console.error("❌ getAllOrders error:", err);
+    res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
 };
 
@@ -32,22 +29,47 @@ const addOrders = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    // ✅ Normalize & validate items — must include a valid Mongo ObjectId
+    const normalizedItems = items.map((item) => {
+      const rawId = item.productId || item._id;
+      const pid = String(rawId || "").trim();
+
+      if (!pid || !mongoose.Types.ObjectId.isValid(pid)) {
+        throw new Error(
+          `Invalid productId for item "${item.productName || item.name || "Unknown"}"`
+        );
+      }
+
+      return {
+        productId: pid,
+        productName: item.productName || item.name || "Unknown Product",
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 1),
+      };
+    });
+
+    const totalAmount = normalizedItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
     const newOrder = new Order({
-      userId: req.user._id, // associate with logged-in customer
+      userId: req.user._id,
       contact,
-      items,
+      items: normalizedItems,
       paymentMethod,
       totalAmount,
     });
 
     await newOrder.save();
 
-    res.status(201).json({ message: "Order placed successfully", order: newOrder });
+    res.status(201).json({
+      message: "Order placed successfully",
+      order: newOrder,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Unable to add order", error: err });
+    console.error("❌ addOrders error:", err);
+    res.status(500).json({ message: "Unable to add order", error: err.message });
   }
 };
 
@@ -56,21 +78,24 @@ const getOrderById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const order = await Order.findById(id);
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid order id" });
     }
 
-    // Customers can only access their own orders
-    if (req.user.role.toLowerCase() === "user" && order.userId.toString() !== req.user._id.toString()) {
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if (
+      (req.user.role || "").toLowerCase() === "user" &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ message: "Forbidden: not your order" });
     }
 
     res.status(200).json({ order });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching order", error: err });
+    console.error("❌ getOrderById error:", err);
+    res.status(500).json({ message: "Error fetching order", error: err.message });
   }
 };
 
@@ -80,11 +105,17 @@ const updateOrder = async (req, res) => {
   const { contact, items, paymentMethod, status } = req.body;
 
   try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid order id" });
+    }
+
     const order = await Order.findById(id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Customers cannot update orders that are not theirs
-    if (req.user.role.toLowerCase() === "user" && order.userId.toString() !== req.user._id.toString()) {
+    if (
+      (req.user.role || "").toLowerCase() === "user" &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ message: "Forbidden: not your order" });
     }
 
@@ -93,16 +124,33 @@ const updateOrder = async (req, res) => {
     order.status = status ?? order.status;
 
     if (items && items.length > 0) {
-      order.items = items;
-      order.totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      order.items = items.map((item) => {
+        const rawId = item.productId || item._id;
+        const pid = String(rawId || "").trim();
+        if (!pid || !mongoose.Types.ObjectId.isValid(pid)) {
+          throw new Error(
+            `Invalid productId for item "${item.productName || item.name || "Unknown"}"`
+          );
+        }
+        return {
+          productId: pid,
+          productName: item.productName || item.name || "Unknown Product",
+          price: Number(item.price || 0),
+          quantity: Number(item.quantity || 1),
+        };
+      });
+
+      order.totalAmount = order.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
     }
 
     await order.save();
-
     res.status(200).json({ message: "Order updated successfully", order });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error updating order", error: err });
+    console.error("❌ updateOrder error:", err);
+    res.status(500).json({ message: "Error updating order", error: err.message });
   }
 };
 
@@ -111,20 +159,25 @@ const deleteOrder = async (req, res) => {
   const { id } = req.params;
 
   try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid order id" });
+    }
+
     const order = await Order.findById(id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Customers can only delete their own orders
-    if (req.user.role.toLowerCase() === "user" && order.userId.toString() !== req.user._id.toString()) {
+    if (
+      (req.user.role || "").toLowerCase() === "user" &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ message: "Forbidden: not your order" });
     }
 
     await order.deleteOne();
-
     res.status(200).json({ message: "Order deleted successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error deleting order", error: err });
+    console.error("❌ deleteOrder error:", err);
+    res.status(500).json({ message: "Error deleting order", error: err.message });
   }
 };
 

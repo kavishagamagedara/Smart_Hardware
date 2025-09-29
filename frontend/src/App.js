@@ -31,12 +31,13 @@ import ReceivedOrders from "./components/Order/Supplier/ReceivedOrders";
 import AdminCart from "./components/Order/Admin/AdminCart";
 import AdminCheckout from "./components/Order/Admin/AdminCheckout";
 import AdminOrders from "./components/Order/Admin/AdminOrders";
+import AdminUpdateOrder from "./components/Order/Admin/AdminUpdateOrder";
 
 import PaymentSuccess from "./components/payment/PaymentSuccess";
 
-import CustomerReviews from "./components/Feedback/pages/MyReviews";
-import ProductReviews from "./components/Feedback/pages/ProductReviews";
-import SubmitReview from "./components/Feedback/pages/SubmitReview";
+import SubmitReview from "./components/Reviews_&_Feedback/SubmitReviewNew"
+import ProductReviews from "./components/Reviews_&_Feedback/ProductReviews";
+import CareDashboard from "./components/Dashboard/CareDashboard";
 
 import Home from "./components/Basics/Home";
 import Header from "./components/Basics/Header";
@@ -53,7 +54,16 @@ function PrivateRoute({ children, roles }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
 
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  // Normalize role for robust matching
+  const role = String(user.role || "")
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  if (roles && !roles.map(r => String(r).replace(/[_-]/g, " ").replace(/\s+/g, " ").trim().toLowerCase()).includes(role)) {
+    return <Navigate to="/" replace />;
+  }
 
   return children;
 }
@@ -62,8 +72,14 @@ function PrivateRoute({ children, roles }) {
 function GuestRoute({ children }) {
   const { user } = useAuth();
   if (user) {
-    if (user.role === "admin") return <Navigate to="/AdminDashboard" replace />;
-    if (user.role === "supplier") return <Navigate to="/SalesDashboard" replace />;
+    const role = String(user.role || "")
+      .replace(/[_-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    if (role === "admin") return <Navigate to="/AdminDashboard" replace />;
+    if (role === "supplier") return <Navigate to="/SalesDashboard" replace />;
+    if (role === "customer care manager") return <Navigate to="/caredashboard" replace />;
     return <Navigate to="/CustomerDashboard" replace />;
   }
   return children;
@@ -101,14 +117,8 @@ function App() {
               <Route path="/Checkout" element={
                 <PrivateRoute roles={["user"]}><Checkout /></PrivateRoute>
               } />
-              <Route path="/SubmitReview" element={
+              <Route path="/add-review" element={
                 <PrivateRoute roles={["user"]}><SubmitReview /></PrivateRoute>
-              } />
-              <Route path="/ProductReviews" element={
-                <PrivateRoute roles={["user"]}><ProductReviews /></PrivateRoute>
-              } />
-              <Route path="/CustomerReviews" element={
-                <PrivateRoute roles={["user"]}><CustomerReviews /></PrivateRoute>
               } />
               <Route path="/CustomerOrders" element={
                 <PrivateRoute roles={["user","admin"]}><CustomerOrders /></PrivateRoute>
@@ -123,6 +133,9 @@ function App() {
               } />
               <Route path="/AdminCart" element={
                 <PrivateRoute roles={["admin"]}><AdminCart /></PrivateRoute>
+              } />
+              <Route path="/AdminUpdateOrder/:id" element={
+                <PrivateRoute roles={["admin"]}><AdminUpdateOrder /></PrivateRoute>
               } />
               <Route path="/AdminCheckout" element={
                 <PrivateRoute roles={["admin"]}><AdminCheckout /></PrivateRoute>
@@ -143,10 +156,17 @@ function App() {
               <Route path="/admin-supplier-product" element={
                 <PrivateRoute roles={["admin"]}><SupplierAdminProductList /></PrivateRoute>
               } />
+              
+              <Route path="/caredashboard" element={
+                <PrivateRoute roles={["customer care manager","admin"]}><CareDashboard /></PrivateRoute>
+              } />
 
               {/* Supplier routes */}
               <Route path="/supplier-products" element={
                 <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductList /></PrivateRoute>
+              } />
+              <Route path="/product/:id/reviews" element={
+                <PrivateRoute roles={["user","supplier","admin"]}><ProductReviews /></PrivateRoute>
               } />
               <Route path="/add-supplier-product" element={
                 <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductForm /></PrivateRoute>

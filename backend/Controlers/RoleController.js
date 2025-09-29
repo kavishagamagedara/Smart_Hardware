@@ -3,6 +3,20 @@ const Role = require("../Model/RoleModel");
 
 const list = async (_req, res) => {
   try {
+    // Ensure 'customer care manager' role exists
+    const CCM_ROLE = {
+      name: 'customer care manager',
+      description: 'Handles customer feedback, responses, and returns',
+      privileges: [
+        'cc_view_feedback',
+        'cc_respond_feedback',
+        'cc_manage_returns',
+      ],
+    };
+    let ccm = await Role.findOne({ name: CCM_ROLE.name });
+    if (!ccm) {
+      ccm = await Role.create(CCM_ROLE);
+    }
     const items = await Role.find().sort({ name: 1 });
     res.json(items);
   } catch (e) {

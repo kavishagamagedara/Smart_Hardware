@@ -7,11 +7,12 @@ const path = require("path");
 const productRouter = require("./Route/ProductRoute");
 const supplierProductRouter = require("./Route/SupplierProductRoute");
 const userRouter = require("./Route/UserRoute");
-const RoleRoute = require("./Route/RoleRoute");
+const roleRouter = require("./Route/RoleRoute");
 const orderRoute = require("./Route/orderRoute");
 const adminorderRoute = require("./Route/adminOrderRoute");
-const ReviewRoutes = require("./Route/ReviewRoutes");
+const reviewRoutes = require("./Route/ReviewRoutes");
 const paymentRoute = require("./Route/paymentRoute");
+const notificationRoute = require("./Route/NotificationRoute");
 
 // ✅ Stripe webhook controller
 const { stripeWebhook } = require("./Controlers/paymentController");
@@ -37,15 +38,22 @@ app.post(
   stripeWebhook
 );
 
-// Routes
+// ------------------ Routes ------------------
 app.use("/products", productRouter);
-app.use("/supplierProducts", supplierProductRouter);
-app.use("/users", userRouter);
-app.use("/roles", RoleRoute);
+app.use("/supplier-products", supplierProductRouter);
+
+app.use("/users", userRouter);       
+app.use("/api/users", userRouter);  
+
+app.use("/roles", roleRouter);         
+app.use("/api/roles", roleRouter);    
+
 app.use("/api/orders", orderRoute);
 app.use("/api/admin-orders", adminorderRoute);
-app.use("/feedback", ReviewRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoute);
+
+app.use("/api/notifications", notificationRoute);
 
 // Root test endpoint
 app.get("/", (req, res) => {

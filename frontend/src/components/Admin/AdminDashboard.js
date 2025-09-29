@@ -1,5 +1,9 @@
 // src/Components/Admin/AdminDashboard.js
 import React, { useEffect, useMemo, useState } from "react";
+import AdminReviews from "../Reviews_&_Feedback/AdminReviews";
+import NotificationsPanel from "../Notifications/NotificationsPanel";
+import AdminReviewRecycleBin from "../Reviews_&_Feedback/AdminReviewRecycleBin";
+import SupplierAdminProductList from "../SupplierProduct/SupplierAdminProductList";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -77,7 +81,9 @@ const roleBadge = (r) =>
     : "badge badge-gray";
 
 export default function AdminDashboard() {
-  const { user, token, updateProfile, changePassword,logout } = useAuth();
+  // --- FEEDBACK SUB-TAB STATE ---
+  const [feedbackTab, setFeedbackTab] = useState("reviews");
+  const { user, token, updateProfile, changePassword, logout } = useAuth();
   const navigate = useNavigate();
 
   // ---------------- Tabs (hash-aware) ----------------
@@ -102,50 +108,44 @@ export default function AdminDashboard() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const loadUsers = async () => {
     setLoadingUsers(true);
     setErr("");
     try {
-      const res = await fetch(`${API}/users`, {
-        headers: { Authorization: token ? `Bearer ${token}` : undefined },
-      });
+      const res = await fetch(`${API}/users`, { headers: authHeader });
       if (!res.ok)
         throw new Error((await res.json().catch(() => ({}))).message || "Failed to load users");
       setUsers(await res.json());
     } catch (e) {
       setErr(e.message);
+      setUsers([]);
     } finally {
       setLoadingUsers(false);
     }
   };
 
-  // ✅ roles list requires Authorization
   const loadRoles = async () => {
     setLoadingRoles(true);
     setErr("");
     try {
-      const res = await fetch(`${API}/roles`, {
-        headers: { Authorization: token ? `Bearer ${token}` : undefined },
-      });
+      const res = await fetch(`${API}/roles`, { headers: authHeader });
       if (!res.ok)
         throw new Error((await res.json().catch(() => ({}))).message || "Failed to load roles");
       setRoles(await res.json());
     } catch (e) {
       setErr(e.message);
+      setRoles([]);
     } finally {
       setLoadingRoles(false);
     }
   };
 
   useEffect(() => {
-  if (tab === "users") {
-    loadUsers();
-  }
-  if (tab === "roles") {
-    loadRoles();
-  }
-}, [tab, token]);  // reruns whenever tab or token changes
-
+    if (tab === "users") loadUsers();
+    if (tab === "roles") loadRoles();
+  }, [tab, token]);
 
   // ---------------- Profile ----------------
   const initials = (user?.name || "A")
@@ -185,6 +185,39 @@ export default function AdminDashboard() {
     }
   };
 
+    // ---------------- Users: search (by name or role) ----------------
+  const [q, setQ] = useState("");
+  const filteredUsers = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return users;
+    return users.filter(
+      (u) => (u.name || "").toLowerCase().includes(t) || (u.role || "").toLowerCase().includes(t)
+    );
+  }, [q, users]);
+
+  // ---------------- Theme (Settings) ----------------
+  const [theme, setTheme] = useState("light"); // 'light' | 'dark'
+  const applyTheme = (t) => {
+    const root = document.documentElement;
+    if (t === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+    localStorage.setItem("theme", t);
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") {
+      setTheme(saved);
+      applyTheme(saved);
+    } else {
+      const isDark = document.documentElement.classList.contains("dark");
+      const initial = isDark ? "dark" : "light";
+      setTheme(initial);
+      localStorage.setItem("theme", initial);
+    }
+  }, []);
+
+
   const savePassword = async (e) => {
     e.preventDefault();
     setMsg("");
@@ -203,18 +236,9 @@ export default function AdminDashboard() {
 
   // ---------------- Users: CRUD ----------------
   const emptyUser = useMemo(
-    () => ({
-      _id: "",
-      name: "",
-      email: "",
-      password: "",
-      age: "",
-      address: "",
-      role: "user",
-    }),
+    () => ({ _id: "", name: "", email: "", password: "", age: "", address: "", role: "user" }),
     []
   );
-
   const [userForm, setUserForm] = useState(emptyUser);
   const [userMode, setUserMode] = useState("create"); // create | edit
   const [userBusy, setUserBusy] = useState(false);
@@ -248,24 +272,17 @@ export default function AdminDashboard() {
     setErr("");
     setMsg("");
     if (!userForm.name || !userForm.email) return setErr("Name and email are required.");
-
     try {
       setUserBusy(true);
       if (userMode === "create") {
         const payload = {
-          name: userForm.name,
-          email: userForm.email,
+          ...userForm,
+          role: userForm.role ? userForm.role.toLowerCase() : "user",
           password: userForm.password || "changeme123",
-          age: userForm.age ? Number(userForm.age) : undefined,
-          address: userForm.address || undefined,
-          role: userForm.role || "user",
         };
         const res = await fetch(`${API}/users`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
+          headers: { "Content-Type": "application/json", ...authHeader },
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Create failed");
@@ -276,14 +293,11 @@ export default function AdminDashboard() {
           email: userForm.email,
           age: userForm.age ? Number(userForm.age) : undefined,
           address: userForm.address || undefined,
-          role: userForm.role || "user",
+          role: userForm.role ? userForm.role.toLowerCase() : "user",
         };
         const res = await fetch(`${API}/users/${userForm._id}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
+          headers: { "Content-Type": "application/json", ...authHeader },
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Update failed");
@@ -305,7 +319,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`${API}/users/${u._id}`, {
         method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+        headers: authHeader,
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Delete failed");
       setMsg("User deleted");
@@ -316,15 +330,7 @@ export default function AdminDashboard() {
   };
 
   // ---------------- Roles: CRUD ----------------
-  const emptyRole = useMemo(
-    () => ({
-      _id: "",
-      name: "",
-      description: "",
-      privileges: [],
-    }),
-    []
-  );
+  const emptyRole = useMemo(() => ({ _id: "", name: "", description: "", privileges: [] }), []);
   const [roleForm, setRoleForm] = useState(emptyRole);
   const [roleMode, setRoleMode] = useState("create"); // create | edit
   const [roleBusy, setRoleBusy] = useState(false);
@@ -355,36 +361,21 @@ export default function AdminDashboard() {
     setErr("");
     setMsg("");
     if (!roleForm.name) return setErr("Role name is required.");
-
     try {
       setRoleBusy(true);
       if (roleMode === "create") {
         const res = await fetch(`${API}/roles`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : undefined, // ✅ auth
-          },
-          body: JSON.stringify({
-            name: roleForm.name,
-            description: roleForm.description,
-            privileges: roleForm.privileges,
-          }),
+          headers: { "Content-Type": "application/json", ...authHeader },
+          body: JSON.stringify(roleForm),
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Create role failed");
         setMsg("Role created");
       } else {
         const res = await fetch(`${API}/roles/${roleForm._id}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : undefined, // ✅ auth
-          },
-          body: JSON.stringify({
-            name: roleForm.name,
-            description: roleForm.description,
-            privileges: roleForm.privileges,
-          }),
+          headers: { "Content-Type": "application/json", ...authHeader },
+          body: JSON.stringify(roleForm),
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Update role failed");
         setMsg("Role updated");
@@ -405,7 +396,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`${API}/roles/${r._id}`, {
         method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : undefined }, // ✅ auth
+        headers: authHeader,
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Delete role failed");
       setMsg("Role deleted");
@@ -415,84 +406,15 @@ export default function AdminDashboard() {
     }
   };
 
-  // ---------------- Admin quick views: Sales & Finance ----------------
-  const [salesStats, setSalesStats] = useState({ totalOrders: 0, refunded: 0, recent: [] });
-  const [salesOrders, setSalesOrders] = useState([]);
-  useEffect(() => {
-    if (tab !== "sales") return;
-    const headers = { Authorization: token ? `Bearer ${token}` : undefined };
-    (async () => {
-      try {
-        const s = await fetch(`${API}/sales/dashboard`, { headers });
-        const o = await fetch(`${API}/sales/orders`, { headers });
-        if (s.ok) setSalesStats(await s.json());
-        else setSalesStats({ totalOrders: 128, refunded: 3, recent: [] });
-        if (o.ok) setSalesOrders(await o.json());
-        else setSalesOrders([]);
-      } catch {
-        setSalesStats({ totalOrders: 128, refunded: 3, recent: [] });
-        setSalesOrders([]);
-      }
-    })();
-  }, [tab, token]);
-
-  const [finStats, setFinStats] = useState({ totalReceived: 0, recent: [] });
-  useEffect(() => {
-    if (tab !== "finance") return;
-    const headers = { Authorization: token ? `Bearer ${token}` : undefined };
-    (async () => {
-      try {
-        const r = await fetch(`${API}/finance/dashboard`, { headers });
-        if (r.ok) setFinStats(await r.json());
-        else setFinStats({ totalReceived: 0, recent: [] });
-      } catch {
-        setFinStats({ totalReceived: 0, recent: [] });
-      }
-    })();
-  }, [tab, token]);
-
-  // ---------------- Users: search (by name or role) ----------------
-  const [q, setQ] = useState("");
-  const filteredUsers = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    if (!t) return users;
-    return users.filter(
-      (u) => (u.name || "").toLowerCase().includes(t) || (u.role || "").toLowerCase().includes(t)
-    );
-  }, [q, users]);
-
-  // ---------------- Theme (Settings) ----------------
-  const [theme, setTheme] = useState("light"); // 'light' | 'dark'
-  const applyTheme = (t) => {
-    const root = document.documentElement;
-    if (t === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
-    localStorage.setItem("theme", t);
-  };
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || saved === "light") {
-      setTheme(saved);
-      applyTheme(saved);
-    } else {
-      const isDark = document.documentElement.classList.contains("dark");
-      const initial = isDark ? "dark" : "light";
-      setTheme(initial);
-      localStorage.setItem("theme", initial);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ---------------- Suppliers ----------------
+  // ---------------- Suppliers / Sales / Finance ----------------
   const [suppliers, setSuppliers] = useState([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   useEffect(() => {
     if (tab !== "suppliers") return;
     setLoadingSuppliers(true);
-    const headers = { Authorization: token ? `Bearer ${token}` : undefined };
     (async () => {
       try {
-        const r = await fetch(`${API}/suppliers`, { headers });
+        const r = await fetch(`${API}/suppliers`, { headers: authHeader });
         if (r.ok) setSuppliers(await r.json());
         else setSuppliers([]);
       } catch {
@@ -503,11 +425,41 @@ export default function AdminDashboard() {
     })();
   }, [tab, token]);
 
-  const handleLogout = () => {
-  logout();
-  navigate("/login", { replace: true });
-};
+  const [salesStats, setSalesStats] = useState({ totalOrders: 0, refunded: 0, recent: [] });
+  const [salesOrders, setSalesOrders] = useState([]);
+  useEffect(() => {
+    if (tab !== "sales") return;
+    (async () => {
+      try {
+        const s = await fetch(`${API}/sales/dashboard`, { headers: authHeader });
+        const o = await fetch(`${API}/sales/orders`, { headers: authHeader });
+        setSalesStats(s.ok ? await s.json() : { totalOrders: 128, refunded: 3, recent: [] });
+        setSalesOrders(o.ok ? await o.json() : []);
+      } catch {
+        setSalesStats({ totalOrders: 128, refunded: 3, recent: [] });
+        setSalesOrders([]);
+      }
+    })();
+  }, [tab, token]);
 
+  const [finStats, setFinStats] = useState({ totalReceived: 0, recent: [] });
+  useEffect(() => {
+    if (tab !== "finance") return;
+    (async () => {
+      try {
+        const r = await fetch(`${API}/finance/dashboard`, { headers: authHeader });
+        setFinStats(r.ok ? await r.json() : { totalReceived: 0, recent: [] });
+      } catch {
+        setFinStats({ totalReceived: 0, recent: [] });
+      }
+    })();
+  }, [tab, token]);
+
+  // ---------------- Logout ----------------
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   // ---------------- Render ----------------
   return (
@@ -703,181 +655,74 @@ export default function AdminDashboard() {
         )}
 
         {/* PROFILE */}
-        {tab === "profile" && (
-          <div className="card space-y-5">
-            <div className="flex flex-wrap gap-6 items-center">
-              {user?.avatar ? (
-                <img alt="avatar" src={user.avatar} className="w-20 h-20 rounded-full object-cover" />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-brand-600 text-white grid place-items-center text-2xl font-black">
-                  {initials}
-                </div>
-              )}
-            </div>
 
-            <form onSubmit={saveProfile} className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="label">Name</label>
-                <input
-                  className="input"
-                  value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Email</label>
-                <input className="input" value={user?.email || ""} disabled />
-              </div>
-              <div>
-                <label className="label">Age</label>
-                <input
-                  className="input"
-                  type="number"
-                  value={profile.age}
-                  onChange={(e) => setProfile({ ...profile, age: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Address</label>
-                <input
-                  className="input"
-                  value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <button className="btn btn-primary px-4 py-2">Save profile</button>
-              </div>
-            </form>
-
-            <h3 className="text-xl font-black">Change password</h3>
-            <form onSubmit={savePassword} className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="label">Current password</label>
-                <div className="relative">
-                  <input
-                    className="input pr-10"
-                    type={showPwd.current ? "text" : "password"}
-                    value={pwd.current}
-                    onChange={(e) => setPwd({ ...pwd, current: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-lg"
-                    onClick={() => setShowPwd((s) => ({ ...s, current: !s.current }))}
-                  >
-                    {showPwd.current ? "🙈" : "👁️"}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="label">New password</label>
-                <div className="relative">
-                  <input
-                    className="input pr-10"
-                    type={showPwd.next ? "text" : "password"}
-                    value={pwd.next}
-                    onChange={(e) => setPwd({ ...pwd, next: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-lg"
-                    onClick={() => setShowPwd((s) => ({ ...s, next: !s.next }))}
-                  >
-                    {showPwd.next ? "🙈" : "👁️"}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="label">Confirm new password</label>
-                <div className="relative">
-                  <input
-                    className="input pr-10"
-                    type={showPwd.confirm ? "text" : "password"}
-                    value={pwd.confirm}
-                    onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-lg"
-                    onClick={() => setShowPwd((s) => ({ ...s, confirm: !s.confirm }))}
-                  >
-                    {showPwd.confirm ? "🙈" : "👁️"}
-                  </button>
-                </div>
-              </div>
-              <div className="md:col-span-3">
-                <button className="btn btn-primary px-4 py-2">Change password</button>
-              </div>
-            </form>
-          </div>
-        )}
 
         {/* USERS (with search) */}
-        {tab === "users" && (
-          <div className="card">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-              <h3 className="text-lg font-black">User management</h3>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <input
-                    className="input pl-9"
-                    placeholder="Search by name or role…"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2">🔎</span>
-                </div>
-                <button className="btn btn-primary px-4 py-2" onClick={openCreateUser}>
-                  Create user
-                </button>
-              </div>
-            </div>
+{tab === "users" && (
+  <div className="card">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+      <h3 className="text-lg font-black">User management</h3>
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <input
+            className="input pl-9"
+            placeholder="Search by name or role…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2">🔎</span>
+        </div>
+        <button className="btn btn-primary px-4 py-2" onClick={openCreateUser}>
+          Create user
+        </button>
+      </div>
+    </div>
 
-            <div className="overflow-x-auto">
-              <div className="min-w-[900px]">
-                <div className="grid grid-cols-[200px_1fr_120px_100px_1fr_160px] font-extrabold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/10 pb-2 mb-2">
-                  <span>Name</span>
-                  <span>Email</span>
-                  <span>Role</span>
-                  <span>Age</span>
-                  <span>Address</span>
-                  <span>Actions</span>
-                </div>
-                {loadingUsers ? (
-                  <div className="py-10 text-center text-slate-500 dark:text-slate-400">Loading…</div>
-                ) : filteredUsers.length === 0 ? (
-                  <div className="py-10 text-center text-slate-500 dark:text-slate-400">
-                    {q ? "No matching users." : "No users found."}
-                  </div>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <div
-                      key={u._id}
-                      className="grid grid-cols-[200px_1fr_120px_100px_1fr_160px] items-center py-2 border-b last:border-none border-slate-200 dark:border-white/10"
-                    >
-                      <span className="truncate">{u.name}</span>
-                      <span className="truncate">{u.email}</span>
-                      <span>
-                        <span className={roleBadge(u.role)}>{u.role || "user"}</span>
-                      </span>
-                      <span>{u.age ?? "-"}</span>
-                      <span className="truncate">{u.address || "-"}</span>
-                      <span className="flex gap-2">
-                        <button className="btn btn-ghost px-3 py-1.5" onClick={() => openEditUser(u)}>
-                          Edit
-                        </button>
-                        <button className="btn btn-ghost px-3 py-1.5" onClick={() => removeUser(u)}>
-                          Delete
-                        </button>
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+    <div className="overflow-x-auto">
+      <div className="min-w-[900px]">
+        <div className="grid grid-cols-[200px_1fr_120px_100px_1fr_160px] font-extrabold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/10 pb-2 mb-2">
+          <span>Name</span>
+          <span>Email</span>
+          <span>Role</span>
+          <span>Age</span>
+          <span>Address</span>
+          <span>Actions</span>
+        </div>
+        {loadingUsers ? (
+          <div className="py-10 text-center text-slate-500 dark:text-slate-400">Loading…</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="py-10 text-center text-slate-500 dark:text-slate-400">
+            {q ? "No matching users." : "No users found."}
           </div>
+        ) : (
+          filteredUsers.map((u) => (
+            <div
+              key={u._id}
+              className="grid grid-cols-[200px_1fr_120px_100px_1fr_160px] items-center py-2 border-b last:border-none border-slate-200 dark:border-white/10"
+            >
+              <span className="truncate">{u.name}</span>
+              <span className="truncate">{u.email}</span>
+              <span>
+                <span className={roleBadge(u.role)}>{u.role || "user"}</span>
+              </span>
+              <span>{u.age ?? "-"}</span>
+              <span className="truncate">{u.address || "-"}</span>
+              <span className="flex gap-2">
+                <button className="btn btn-ghost px-3 py-1.5" onClick={() => openEditUser(u)}>
+                  Edit
+                </button>
+                <button className="btn btn-ghost px-3 py-1.5" onClick={() => removeUser(u)}>
+                  Delete
+                </button>
+              </span>
+            </div>
+          ))
         )}
+      </div>
+    </div>
+  </div>
+)}
+
 
         {/* ROLES */}
         {tab === "roles" && (
@@ -991,42 +836,8 @@ export default function AdminDashboard() {
 
         {/* SUPPLIERS */}
         {tab === "suppliers" && (
-          <div className="card overflow-x-auto">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-black">Suppliers</h3>
-            </div>
-            <table className="min-w-[720px] w-full">
-              <thead>
-                <tr className="text-left">
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingSuppliers ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-center text-slate-500">
-                      Loading…
-                    </td>
-                  </tr>
-                ) : suppliers.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-center text-slate-500">
-                      No suppliers yet
-                    </td>
-                  </tr>
-                ) : (
-                  suppliers.map((s) => (
-                    <tr key={s._id || s.email} className="border-t border-white/10">
-                      <td className="py-2">{s.name || "-"}</td>
-                      <td className="py-2">{s.email || "-"}</td>
-                      <td className="py-2">{s.status || "active"}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="card">
+            <SupplierAdminProductList />
           </div>
         )}
 
@@ -1203,7 +1014,7 @@ export default function AdminDashboard() {
                   value={userForm.role}
                   onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                 >
-                  {(roles.length ? roles.map((r) => r.name) : ["admin", "staff", "user"]).map((r) => (
+                  {(roles.length ? roles.map((r) => r.name) : ["admin", "customer care manager", "staff", "user"]).map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -1302,4 +1113,5 @@ export default function AdminDashboard() {
       )}
     </div>
   );
+  
 }

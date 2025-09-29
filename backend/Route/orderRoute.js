@@ -38,7 +38,10 @@ router.put("/cancel/:id", requireAuth, async (req, res) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     // Customers can only cancel their own orders
-    if (req.user.role.toLowerCase() === "user" && order.userId.toString() !== req.user._id.toString()) {
+    if (
+      req.user.role.toLowerCase() === "user" &&
+      order.userId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ message: "Forbidden: not your order" });
     }
 
@@ -64,10 +67,13 @@ router.put("/cancel/:id", requireAuth, async (req, res) => {
 });
 
 /* ---------------- Active Orders ---------------- */
-router.get("/orders", requireAuth, orderController.getAllOrders);
-router.post("/orders", requireAuth, orderController.addOrders);
-router.get("/orders/:id", requireAuth, orderController.getOrderById);
-router.put("/orders/:id", requireAuth, orderController.updateOrder);
-router.delete("/orders/:id", requireAuth, orderController.deleteOrder);
+// ✅ Remove the extra /orders
+// orderRoute.js
+router.get("/", requireAuth, orderController.getAllOrders);
+router.post("/", requireAuth, orderController.addOrders);
+router.get("/:id", requireAuth, orderController.getOrderById);
+router.put("/:id", requireAuth, orderController.updateOrder);
+router.delete("/:id", requireAuth, orderController.deleteOrder);
+
 
 module.exports = router;

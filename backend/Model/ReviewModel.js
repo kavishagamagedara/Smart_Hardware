@@ -2,10 +2,13 @@ const mongoose = require('mongoose');
 
 const AdminReplySchema = new mongoose.Schema(
   {
-    admin:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    message: { type: String, required: true, trim: true, maxlength: 2000 }
+    admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    adminName: { type: String, trim: true },
+    message: { type: String, required: true, trim: true, maxlength: 2000 },
+    images: [{ type: String }], // Admin can also add images in replies
+    editedAt: { type: Date }
   },
-  { _id: false, timestamps: { createdAt: true, updatedAt: false } }
+  { _id: true, timestamps: { createdAt: true, updatedAt: true } }
 );
 
 const ReviewSchema = new mongoose.Schema(
@@ -24,9 +27,18 @@ const ReviewSchema = new mongoose.Schema(
     rating:  { type: Number, min: 1, max: 5, required: true },
     title:   { type: String, trim: true, maxlength: 200 },
     comment: { type: String, trim: true, maxlength: 3000 },
+    images:  [{ type: String }], // Array of image URLs
 
     // moderation
-    status: { type: String, enum: ['public', 'hidden', 'deleted'], default: 'public', index: true },
+  status: { type: String, enum: ['public', 'hidden', 'deleted'], default: 'public', index: true },
+  statusBeforeDeletion: { type: String, enum: ['public', 'hidden'], default: 'public' },
+  deletedAt: { type: Date, index: true },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  deletedByName: { type: String, trim: true, maxlength: 120 },
+  deletedByRole: { type: String, trim: true, maxlength: 60 },
+  isPinned: { type: Boolean, default: false, index: true },
+  pinnedAt: { type: Date, index: true },
+  pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
     // admin replies
     replies:    [AdminReplySchema],
@@ -37,6 +49,8 @@ const ReviewSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+ReviewSchema.index({ isPinned: -1, pinnedAt: -1, createdAt: -1 });
 
 // Unique constraint for key-based targets (ignores 'deleted')
 ReviewSchema.index(
