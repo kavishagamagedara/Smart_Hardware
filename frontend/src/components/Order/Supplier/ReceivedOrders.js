@@ -23,6 +23,7 @@ function ReceivedOrders() {
     }
   };
 
+
   const handleConfirm = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -32,14 +33,34 @@ function ReceivedOrders() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Order confirmed successfully!");
+        alert("Payment marked as successful!");
         fetchOrders();
       } else {
-        alert(data.message || "Failed to confirm order");
+        alert(data.message || "Failed to confirm payment");
       }
     } catch (err) {
       console.error(err);
-      alert("Error confirming order");
+      alert("Error confirming payment");
+    }
+  };
+
+  const handleDecline = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/admin-orders/${id}/decline`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Payment marked as unsuccessful!");
+        fetchOrders();
+      } else {
+        alert(data.message || "Failed to decline payment");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error declining payment");
     }
   };
 
@@ -79,11 +100,16 @@ function ReceivedOrders() {
                   "N/A"
                 )}
               </td>
-              <td>{o.status}</td>
+              <td>{o.paymentStatus || o.status}</td>
               <td>
-                {o.status === "Pending" && (
-                  <button onClick={() => handleConfirm(o._id)}>Confirm</button>
+                {(!o.paymentStatus || o.paymentStatus === "Pending") && (
+                  <>
+                    <button onClick={() => handleConfirm(o._id)} style={{ marginRight: 8 }}>Confirm</button>
+                    <button onClick={() => handleDecline(o._id)} style={{ background: '#f44336', color: 'white' }}>Decline</button>
+                  </>
                 )}
+                {o.paymentStatus === "Successful" && <span style={{ color: 'green' }}>Successful</span>}
+                {o.paymentStatus === "Unsuccessful" && <span style={{ color: 'red' }}>Unsuccessful</span>}
               </td>
             </tr>
           ))}

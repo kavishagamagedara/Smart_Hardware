@@ -21,6 +21,11 @@ const adminOrderSchema = new mongoose.Schema(
       enum: ["Pending", "Ordered", "Cancelled"],
       default: "Pending",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Unsuccessful", "Successful", "Pending"],
+      default: "Pending",
+    },
     notes: { type: String, default: null },
   },
   { timestamps: true }
