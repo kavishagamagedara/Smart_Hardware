@@ -226,6 +226,27 @@ exports.declineOrder = async (req, res) => {
       { new: true }
     );
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Only create payment if not already exists for this order
+    const Payment = require("../Model/paymentModel");
+    const User = require("../Model/UserModel");
+    const existing = await Payment.findOne({ orderId: order._id, method: "slip" });
+    if (!existing && order.paymentMethod === "Bank Transfer") {
+      // Find the admin user (for userId field)
+      const adminUser = await User.findOne({ role: /admin/i });
+      await Payment.create({
+        paymentName: `AdminOrder ${order._id}`,
+        orderId: order._id,
+        userId: adminUser ? adminUser._id : undefined,
+        paymentStatus: "failed",
+        method: "slip",
+        amount: order.totalCost,
+        currency: "usd",
+        description: `Bank transfer for admin order ${order._id} (declined)`,
+        slipUrl: order.slip || undefined,
+      });
+    }
+
     res.json({ message: "Payment declined", order });
   } catch (err) {
     console.error("Decline Order Error:", err);
