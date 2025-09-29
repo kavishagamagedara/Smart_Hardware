@@ -27,13 +27,20 @@ export default function Login() {
       setBusy(true);
       const { user, token } = await login(form.email, form.password);
 
-      // ✅ Save token in localStorage
-      localStorage.setItem("token", token);
+  // ✅ Save token in localStorage
+  localStorage.setItem("token", token);
 
-      // Redirect based on role
-      if (user.role === "admin") navigate("/AdminDashboard");
-      else if (user.role === "supplier") navigate("/dashboard");
-      else navigate("/CustomerDashboard");
+  // Normalize role and debug (handle spaces, dashes, underscores)
+  const role = String(user.role || "")
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  console.log("User role after login:", role);
+  if (role === "admin") navigate("/AdminDashboard");
+  else if (role === "supplier") navigate("/dashboard");
+  else if (role === "customer care manager") navigate("/caredashboard");
+  else navigate("/CustomerDashboard");
 
     } catch (ex) {
       setErr(ex.message || "Login failed");

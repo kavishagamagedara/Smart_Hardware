@@ -3,8 +3,6 @@ import React, { useContext, useState } from "react";
 import { CartContext } from "../../Order/Customer/CartContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckOut.css";
-
-// ✅ Stripe import
 import { loadStripe } from "@stripe/stripe-js";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -14,6 +12,7 @@ function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedItems = location.state?.selectedItems || [];
+
   const [contact, setContact] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Pay Online");
 
@@ -34,18 +33,13 @@ function Checkout() {
     }
 
     const items = selectedItems.map((item) => ({
-      productId: item._id || item.id,
+      productId: item.productId || item._id,   // ✅ always pass real productId
       productName: item.name,
       quantity: item.quantity,
       price: item.price,
     }));
 
-    const orderData = {
-      contact,
-      paymentMethod,
-      items,
-      totalAmount: subtotal,
-    };
+    const orderData = { contact, paymentMethod, items };
 
     try {
       const token = localStorage.getItem("token");
@@ -55,9 +49,9 @@ function Checkout() {
         return;
       }
 
-      // 1️⃣ Create the order (must hit /api/orders/orders)
       console.log("📦 Sending orderData:", orderData);
-      const orderRes = await fetch("http://localhost:5000/api/orders/orders", {
+
+      const orderRes = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +68,6 @@ function Checkout() {
         return;
       }
 
-      // 2️⃣ If Pay Online, create Stripe Checkout Session
       if (paymentMethod === "Pay Online") {
         console.log("💳 Creating Stripe Checkout Session...");
         const paymentRes = await fetch(
@@ -86,9 +79,9 @@ function Checkout() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              amount: Math.round(subtotal * 100), // cents
+              amount: Math.round(subtotal * 100),
               currency: "usd",
-              orderId: orderResult.order._id, // ✅ use order from backend
+              orderId: orderResult.order._id,
             }),
           }
         );
@@ -98,21 +91,15 @@ function Checkout() {
 
         const { id, error } = paymentJson;
         if (!id) {
-          alert(
-            "Failed to initialize Stripe Checkout: " +
-              (error || "Unknown error")
-          );
+          alert("Failed to initialize Stripe Checkout: " + (error || "Unknown error"));
           return;
         }
 
         const stripe = await stripePromise;
         await stripe.redirectToCheckout({ sessionId: id });
       } else {
-        // Pay Later flow
         alert("Order placed successfully!");
-        selectedItems.forEach((item) =>
-          removeFromCart(item._id || item.id)
-        );
+        selectedItems.forEach((item) => removeFromCart(item.productId));
         navigate("/CustomerDashboard");
       }
     } catch (err) {
@@ -148,9 +135,10 @@ function Checkout() {
 
       <h3>Order Summary</h3>
       {selectedItems.map((item) => (
-        <p key={item._id || item.id}>
-          {item.name} x {item.quantity} = $
-          {(item.price * item.quantity).toFixed(2)}
+        <p key={item.productId}>
+          {item.name} x {item.quantity} = ${(
+            item.price * item.quantity
+          ).toFixed(2)}
         </p>
       ))}
 

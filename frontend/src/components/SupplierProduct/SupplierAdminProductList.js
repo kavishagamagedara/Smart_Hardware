@@ -16,7 +16,7 @@ function SupplierAdminProductList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/supplierProducts", {
+  fetch("http://localhost:5000/supplier-products", {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },

@@ -1,15 +1,129 @@
 const mongoose = require('mongoose');
 const Review = require('../Model/ReviewModel');
 const Counter = require('../Model/Counter');
+const Product = require('../Model/ProductModel');
+const { updateProductRating } = require('./ProductController');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const Notification = require('../Model/NotificationModel');
+const User = require('../Model/UserModel');
+const Order = require('../Model/orderModel'); 
+
+
+// Configure multer for review image uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = 'uploads/reviews/';
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'review-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 const vstr = (x) => (x ?? '').toString().trim();
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function canEditOrDelete(review, requester) {
-  if (!requester) return false;
+const buildActorName = (req, fallback = 'System') =>
+  vstr(req?.header?.('x-user-name')) || vstr(req?.user?.name) || fallback;
+
+const notifyAdmins = async ({ title, message, type = 'general', relatedReview, metadata, createdBy }) => {
+  try {
+    const admins = await User.find({ role: 'admin' }).select('_id');
+    if (!admins.length) {
+      await Notification.create({
+        recipient: null,
+        recipientRole: 'admin',
+        title,
+        message,
+        type,
+        relatedReview,
+        metadata,
+        createdBy
+      });
+      return;
+    }
+
+    const docs = admins.map((admin) => ({
+      recipient: admin._id,
+      recipientRole: 'admin',
+      title,
+      message,
+      type,
+      relatedReview,
+      metadata,
+      createdBy
+    }));
+
+    await Notification.insertMany(docs, { ordered: false });
+  } catch (err) {
+    console.warn('notifyAdmins error:', err?.message || err);
+  }
+};
+
+const notifyUser = async (userId, payload = {}) => {
+  if (!userId) return;
+  try {
+    await Notification.create({
+      recipient: userId,
+      recipientRole: 'user',
+      ...payload
+    });
+  } catch (err) {
+    console.warn('notifyUser error:', err?.message || err);
+  }
+};
+
+const removeFiles = (paths = []) => {
+  paths
+    .filter(Boolean)
+    .forEach((img) => {
+      const relativePath = img.startsWith('/') ? img.slice(1) : img;
+      const fullPath = path.join(process.cwd(), relativePath);
+      fs.unlink(fullPath, (error) => {
+        if (error && error.code !== 'ENOENT') {
+          console.warn('Failed to remove file:', fullPath, error.message);
+        }
+      });
+    });
+};
+
+const hasPermission = (req, perms = []) => {
+  if (!req || !Array.isArray(req.userPerms) || req.userPerms.length === 0) return false;
+  const userPerms = req.userPerms.map((perm) => String(perm || '').toLowerCase());
+  return perms.some((perm) => userPerms.includes(String(perm || '').toLowerCase()));
+};
+
+const hasModerationRights = (req) => {
+  if (req?.user?.role === 'admin') return true;
+  const moderationPerms = ['moderate_feedback', 'cc_view_feedback', 'cc_respond_feedback', 'cc_manage_returns'];
+  return hasPermission(req, moderationPerms);
+};
+
+function canEditOrDelete(review, req) {
+  if (!req?.user) return false;
+  const requester = req.user;
   const isOwner = review.user?.toString() === requester._id?.toString();
-  const isAdmin = requester.role === 'admin';
-  return isOwner || isAdmin;
+  if (isOwner) return true;
+  if (requester.role === 'admin') return true;
+  return hasModerationRights(req);
 }
 
 // ---------- CREATE (upsert per user+target) ----------
@@ -67,8 +181,16 @@ const createReview = async (req, res) => {
       reviewNo
     };
 
+    // Handle uploaded images
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        images.push(`/uploads/reviews/${file.filename}`);
+      });
+    }
+
     const update = {
-      $set: { rating, title, comment, targetName },
+      $set: { rating, title, comment, targetName, images },
       $setOnInsert: setOnInsert
     };
 
@@ -79,6 +201,27 @@ const createReview = async (req, res) => {
       runValidators: true
     });
 
+    // Update product rating if this is a product review
+    if (targetType === 'Product' && (targetKey || doc.targetKey)) {
+      await updateProductRating(targetKey || doc.targetKey);
+    }
+
+    if (!existed) {
+      await notifyAdmins({
+        title: 'New customer feedback received',
+        message: `${userName} rated ${targetName} ${rating}/5`,
+        type: 'review-submitted',
+        relatedReview: doc._id,
+        metadata: {
+          targetName,
+          rating,
+          reviewNo: doc.reviewNo,
+          targetId: targetId || targetKey
+        },
+        createdBy: userId
+      });
+    }
+
     res.status(existed ? 200 : 201).json(doc);
   } catch (err) {
     console.error('createReview error:', err);
@@ -86,16 +229,135 @@ const createReview = async (req, res) => {
   }
 };
 
-// ---------- LIST (supports ?q= ... including "ID:PRD-0002") ----------
+// ---------- GET PRODUCT REVIEWS ----------
+const getProductReviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    // First get the product to validate it exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const filter = {
+      targetType: 'Product',
+      $or: [
+        { targetId: productId },
+        { targetKey: productId } // In case using string IDs
+      ],
+      status: 'public'
+    };
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [reviews, total] = await Promise.all([
+      Review.find(filter)
+        .populate('user', 'name')
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(Number(limit)),
+      Review.countDocuments(filter)
+    ]);
+
+    // Calculate average rating
+    const avgRating = reviews.length > 0 
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+
+    res.json({
+      product: {
+        _id: product._id,
+        name: product.name,
+        averageRating: avgRating,
+        totalReviews: total
+      },
+      reviews: reviews,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (err) {
+    console.error('getProductReviews error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ---------- CHECK IF USER CAN REVIEW PRODUCT ----------
+const canUserReviewProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    console.log("🔍 Checking canUserReviewProduct (no order check):", {
+      userId,
+      productId,
+    });
+
+    // ✅ Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // ✅ Check if user already reviewed this product
+    const existingReview = await Review.findOne({
+      user: userId,
+      targetType: "Product",
+      $or: [{ targetId: productId }, { targetKey: productId }],
+      status: { $ne: "deleted" },
+    });
+
+    console.log(
+      "✍ Existing review?",
+      existingReview ? existingReview._id : "NONE"
+    );
+
+    res.json({
+      canReview: !existingReview,
+      hasReviewed: !!existingReview,
+      existingReview: existingReview || null,
+      product: {
+        _id: product._id,
+        name: product.name,
+      },
+    });
+  } catch (err) {
+    console.error("❌ canUserReviewProduct error:", err);
+    res.status(500).json({
+      message: "Server error",
+      detail: err?.message || String(err),
+    });
+  }
+};
+
+
 const getReviews = async (req, res) => {
   try {
     const {
-      targetType, targetId, targetKey, status, user,
-      sort = '-createdAt', page = 1, limit = 10, mine, q
+      targetType,
+      targetId,
+      targetKey,
+      status,
+      user,
+      sort,
+      page = 1,
+      limit = 10,
+      mine,
+      q,
+      pinned
     } = req.query;
 
-    const requester = req.user || null;
-    const isAdmin = requester?.role === 'admin';
+  const requester = req.user || null;
+  const isAdmin = requester?.role === 'admin';
+  const canModerate = hasModerationRights(req);
 
     const filter = {};
     if (targetType) filter.targetType = targetType;
@@ -104,8 +366,26 @@ const getReviews = async (req, res) => {
     if (mine && requester?._id) filter.user = requester._id;
     else if (user) filter.user = user;
 
-    if (isAdmin) { if (status) filter.status = status; }
-    else { filter.status = 'public'; }
+    if (isAdmin || canModerate) {
+      if (status != null) {
+        const statusValue = Array.isArray(status) ? status.join(',') : String(status);
+        if (statusValue === 'all') {
+          filter.status = { $ne: 'deleted' };
+        } else if (statusValue.includes(',')) {
+          const parts = statusValue.split(',').map((item) => item.trim()).filter(Boolean);
+          if (parts.length) filter.status = { $in: parts };
+        } else {
+          filter.status = statusValue;
+        }
+      } else {
+        filter.status = { $ne: 'deleted' };
+      }
+    } else {
+      filter.status = 'public';
+    }
+
+    if (pinned === 'true') filter.isPinned = true;
+    else if (pinned === 'false') filter.isPinned = false;
 
     const queryText = vstr(q);
     if (queryText) {
@@ -114,22 +394,34 @@ const getReviews = async (req, res) => {
         const key = idMatch[1].trim();
         const exactKey = new RegExp(`^${escapeRegex(key)}$`, 'i');
         const ors = [{ targetKey: exactKey }];
-        if (/^[0-9a-fA-F]{24}$/.test(key)) ors.push({ targetId: key });
+        if (/^[0-9a-fA-F]{24}$/.test(key)) {
+          ors.push({ targetId: key });
+          ors.push({ _id: key });
+        }
+        if (!Number.isNaN(Number(key))) ors.push({ reviewNo: Number(key) });
         filter.$or = ors;
       } else {
         const re = new RegExp(escapeRegex(queryText), 'i');
-        filter.$or = [
+        const ors = [
           { targetName: re },
           { targetKey:  re },
+          { userName:   re },
           { title:      re },
           { comment:    re }
         ];
+        const numericQuery = Number(queryText);
+        if (!Number.isNaN(numericQuery)) ors.push({ reviewNo: numericQuery });
+        if (/^[0-9a-fA-F]{24}$/.test(queryText.trim())) ors.push({ _id: queryText.trim() });
+        filter.$or = ors;
       }
     }
 
     const skip = (Number(page) - 1) * Number(limit);
+    const sortSpec = typeof sort === 'string' && sort.trim()
+      ? sort.trim()
+      : { isPinned: -1, pinnedAt: -1, createdAt: -1 };
     const [items, total] = await Promise.all([
-      Review.find(filter).sort(sort).skip(skip).limit(Number(limit)),
+      Review.find(filter).sort(sortSpec).skip(skip).limit(Number(limit)),
       Review.countDocuments(filter)
     ]);
 
@@ -153,8 +445,9 @@ const getReviewById = async (req, res) => {
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
     const isAdmin = req.user?.role === 'admin';
+    const canModerate = hasModerationRights(req);
     const isOwner = doc.user?.toString() === req.user?._id?.toString();
-    if (!isAdmin && !isOwner && doc.status !== 'public') {
+    if (!isAdmin && !canModerate && !isOwner && doc.status !== 'public') {
       return res.status(403).json({ message: 'Forbidden' });
     }
     res.json(doc);
@@ -170,14 +463,19 @@ const updateReview = async (req, res) => {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
-    if (!canEditOrDelete(doc, req.user)) return res.status(403).json({ message: 'Forbidden' });
+    if (!canEditOrDelete(doc, req)) return res.status(403).json({ message: 'Forbidden' });
 
-    const allowedForOwner = ['rating', 'title', 'comment'];
+    const allowedForOwner = ['rating', 'title', 'comment', 'targetName'];
     const allowedForAdmin = ['status'];
+    const canModerate = hasModerationRights(req);
+
+    const payload = { ...(req.body || {}) };
+    const retainImagesRaw = payload.retainImages;
+    delete payload.retainImages;
 
     const next = {};
-    for (const [k, v] of Object.entries(req.body || {})) {
-      if (allowedForOwner.includes(k) || (req.user?.role === 'admin' && allowedForAdmin.includes(k))) {
+    for (const [k, v] of Object.entries(payload)) {
+      if (allowedForOwner.includes(k) || (canModerate && allowedForAdmin.includes(k))) {
         next[k] = typeof v === 'string' ? v.trim() : v;
       }
     }
@@ -193,8 +491,56 @@ const updateReview = async (req, res) => {
     }
     if (errors.length) return res.status(400).json({ message: 'Validation failed', errors });
 
+  if (next.rating != null) next.rating = Number(next.rating);
+
     Object.assign(doc, next);
+
+    let retainImages;
+    if (retainImagesRaw == null) {
+      retainImages = Array.isArray(doc.images) ? doc.images.slice() : [];
+    } else if (Array.isArray(retainImagesRaw)) {
+      retainImages = retainImagesRaw;
+    } else {
+      try {
+        const parsed = JSON.parse(retainImagesRaw);
+        retainImages = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        retainImages = [];
+      }
+    }
+
+    const currentImages = Array.isArray(doc.images) ? doc.images.slice() : [];
+    retainImages = retainImages
+      .map((item) => (item || '').toString())
+      .filter((item) => currentImages.includes(item));
+
+    const newImages = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        newImages.push(`/uploads/reviews/${file.filename}`);
+      });
+    }
+
+    const imagesToRemove = currentImages.filter((img) => !retainImages.includes(img));
+    imagesToRemove.forEach((img) => {
+      const relativePath = img.startsWith('/') ? img.slice(1) : img;
+      const fullPath = path.join(process.cwd(), relativePath);
+      fs.unlink(fullPath, (error) => {
+        if (error && error.code !== 'ENOENT') {
+          console.warn('Failed to remove old review image:', fullPath, error.message);
+        }
+      });
+    });
+
+    doc.images = [...retainImages, ...newImages];
+
     await doc.save();
+    
+    // Update product rating if this is a product review
+    if (doc.targetType === 'Product' && doc.targetKey) {
+      await updateProductRating(doc.targetKey);
+    }
+    
     res.json(doc);
   } catch (err) {
     console.error('updateReview error:', err);
@@ -208,10 +554,42 @@ const deleteReview = async (req, res) => {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
-    if (!canEditOrDelete(doc, req.user)) return res.status(403).json({ message: 'Forbidden' });
+  if (!canEditOrDelete(doc, req)) return res.status(403).json({ message: 'Forbidden' });
 
+    const previousStatus = doc.status === 'deleted' ? doc.statusBeforeDeletion || 'public' : doc.status;
+    const actorName = buildActorName(req, 'System');
+
+    doc.statusBeforeDeletion = previousStatus || 'public';
     doc.status = 'deleted';
+    doc.deletedAt = new Date();
+    doc.deletedBy = req.user?._id;
+    doc.deletedByName = actorName;
+  doc.deletedByRole = (req.user?.role || '').toLowerCase();
+    doc.isPinned = false;
+    doc.pinnedAt = null;
+    doc.pinnedBy = undefined;
     await doc.save();
+    
+    // Update product rating if this is a product review
+    if (doc.targetType === 'Product' && doc.targetKey) {
+      await updateProductRating(doc.targetKey);
+    }
+
+  const isOwner = doc.user?.toString() === req.user?._id?.toString();
+    if (!isOwner) {
+      notifyUser(doc.user, {
+        title: 'Your review was removed',
+        message: `${actorName || 'An admin'} moved your review on ${doc.targetName || 'a product'} to the recycle bin.`,
+        type: 'review-deleted',
+        relatedReview: doc._id,
+        metadata: {
+          targetName: doc.targetName,
+          reviewNo: doc.reviewNo
+        },
+        createdBy: req.user?._id
+      });
+    }
+    
     res.json({ message: 'Deleted', id: doc._id });
   } catch (err) {
     console.error('deleteReview error:', err);
@@ -219,8 +597,202 @@ const deleteReview = async (req, res) => {
   }
 };
 
-// ---------- ADMIN: reply ----------
+const listDeletedReviews = async (req, res) => {
+  try {
+    if (!req.user?._id) return res.status(401).json({ message: 'Unauthorized' });
+    const isAdmin = req.user?.role === 'admin';
+    const canModerate = hasModerationRights(req);
+
+    const { page = 1, limit = 10, q } = req.query;
+    const filter = { status: 'deleted' };
+    if (!isAdmin && !canModerate) filter.user = req.user._id;
+
+    const queryText = vstr(q);
+    if (queryText) {
+      const re = new RegExp(escapeRegex(queryText), 'i');
+      filter.$or = [
+        { targetName: re },
+        { userName: re },
+        { title: re },
+        { comment: re }
+      ];
+      if (/^[0-9a-fA-F]{24}$/.test(queryText.trim())) {
+        filter.$or.push({ _id: queryText.trim() });
+      }
+      const numericQuery = Number(queryText);
+      if (!Number.isNaN(numericQuery)) filter.$or.push({ reviewNo: numericQuery });
+    }
+
+    const parsedLimit = Math.min(Math.max(Number(limit) || 10, 1), 100);
+    const parsedPage = Math.max(Number(page) || 1, 1);
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const [items, total] = await Promise.all([
+      Review.find(filter).sort({ deletedAt: -1, createdAt: -1 }).skip(skip).limit(parsedLimit),
+      Review.countDocuments(filter)
+    ]);
+
+    res.json({
+      data: items,
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      pages: Math.ceil(total / parsedLimit)
+    });
+  } catch (err) {
+    console.error('listDeletedReviews error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const restoreReview = async (req, res) => {
+  try {
+    const doc = await Review.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+    if (doc.status !== 'deleted') return res.status(400).json({ message: 'Review is not deleted' });
+
+    const isAdmin = req.user?.role === 'admin';
+    const isOwner = doc.user?.toString() === req.user?._id?.toString();
+    if (!isAdmin && !isOwner) return res.status(403).json({ message: 'Forbidden' });
+
+  const previousStatus = doc.statusBeforeDeletion || 'public';
+  doc.status = previousStatus;
+  doc.deletedAt = null;
+  doc.deletedBy = undefined;
+  doc.deletedByName = undefined;
+  doc.deletedByRole = undefined;
+  doc.statusBeforeDeletion = previousStatus;
+
+    await doc.save();
+
+    if (doc.targetType === 'Product' && doc.targetKey) {
+      await updateProductRating(doc.targetKey);
+    }
+
+    if (!isOwner) {
+      notifyUser(doc.user, {
+        title: 'Your review was restored',
+        message: `${buildActorName(req, 'An admin')} restored your review on ${doc.targetName || 'a product'}.`,
+        type: 'review-restored',
+        relatedReview: doc._id,
+        metadata: {
+          targetName: doc.targetName,
+          rating: doc.rating
+        },
+        createdBy: req.user?._id
+      });
+    }
+
+    res.json(doc);
+  } catch (err) {
+    console.error('restoreReview error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const purgeReview = async (req, res) => {
+  try {
+    const doc = await Review.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+    if (doc.status !== 'deleted') return res.status(400).json({ message: 'Review must be in recycle bin' });
+
+  const isAdmin = req.user?.role === 'admin';
+  const isOwner = doc.user?.toString() === req.user?._id?.toString();
+  if (!isAdmin && !isOwner) return res.status(403).json({ message: 'Forbidden' });
+
+    removeFiles(doc.images || []);
+    const replyImages = (doc.replies || []).flatMap((r) => r.images || []);
+    removeFiles(replyImages);
+
+    await doc.deleteOne();
+
+    if (doc.targetType === 'Product' && doc.targetKey) {
+      await updateProductRating(doc.targetKey);
+    }
+
+    if (!isOwner) {
+      notifyUser(doc.user, {
+        title: 'Your review was permanently removed',
+        message: `${buildActorName(req, 'An admin')} permanently removed your review on ${doc.targetName || 'a product'}.`,
+        type: 'review-deleted',
+        relatedReview: req.params.id,
+        metadata: {
+          targetName: doc.targetName
+        },
+        createdBy: req.user?._id
+      });
+    }
+
+    res.json({ message: 'Purged', id: req.params.id });
+  } catch (err) {
+    console.error('purgeReview error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ---------- ADMIN or CARE MANAGER: reply ----------
 const replyToReview = async (req, res) => {
+  try {
+    // Allow admin, customer care manager, or users with cc_respond_feedback privilege
+    const isAdmin = req.user?.role === 'admin';
+    const isCareManager = String(req.user?.role || '').toLowerCase() === 'customer care manager' || String(req.user?.role || '').toLowerCase().includes('care');
+    const hasCarePerm = Array.isArray(req.userPerms) && req.userPerms.map(p => String(p).toLowerCase()).includes('cc_respond_feedback');
+    if (!isAdmin && !isCareManager && !hasCarePerm) {
+      return res.status(403).json({ message: 'Admin or Customer Care Manager only' });
+    }
+
+    const message = vstr(req.body?.message);
+    if (!message) return res.status(400).json({ message: 'Reply message required' });
+
+    const doc = await Review.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+
+    // Handle uploaded images for admin/care reply
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        images.push(`/uploads/reviews/${file.filename}`);
+      });
+    }
+
+    const adminName = req.user.name || 'Admin';
+    const actorName = buildActorName(req, adminName);
+    
+    doc.replies.push({ 
+      admin: req.user._id, 
+      adminName,
+      message,
+      images
+    });
+    doc.replyCount = doc.replies.length;
+    await doc.save();
+
+    const isOwner = doc.user?.toString() === req.user?._id?.toString();
+    if (!isOwner) {
+      const latestReply = doc.replies[doc.replies.length - 1];
+      notifyUser(doc.user, {
+        title: 'You have a new reply',
+        message: `${actorName} replied to your review on ${doc.targetName || 'a product'}.`,
+        type: 'review-replied',
+        relatedReview: doc._id,
+        metadata: {
+          targetName: doc.targetName,
+          reviewNo: doc.reviewNo,
+          replyId: latestReply?._id,
+          replyMessagePreview: message.slice(0, 140)
+        },
+        createdBy: req.user?._id
+      });
+    }
+
+    res.json(doc);
+  } catch (err) {
+    console.error('replyToReview error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const updateReply = async (req, res) => {
   try {
     if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
 
@@ -230,13 +802,66 @@ const replyToReview = async (req, res) => {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
-    doc.replies.push({ admin: req.user._id, message });
-    doc.replyCount = doc.replies.length;
+    const reply = doc.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ message: 'Reply not found' });
+
+    if (reply.admin?.toString() !== req.user?._id?.toString()) {
+      return res.status(403).json({ message: 'You can only edit your own replies' });
+    }
+
+    let retainImages;
+    if (req.body?.retainImages == null) {
+      retainImages = reply.images || [];
+    } else if (Array.isArray(req.body.retainImages)) {
+      retainImages = req.body.retainImages;
+    } else {
+      try {
+        retainImages = JSON.parse(req.body.retainImages);
+      } catch {
+        retainImages = [];
+      }
+    }
+
+    if (!Array.isArray(retainImages)) retainImages = [];
+    retainImages = retainImages
+      .filter(Boolean)
+      .map((item) => item.toString())
+      .filter((item) => (reply.images || []).includes(item));
+
+    const newImages = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        newImages.push(`/uploads/reviews/${file.filename}`);
+      });
+    }
+
+    if (retainImages.length + newImages.length > 3) {
+      return res.status(400).json({ message: 'You can attach up to 3 images per reply' });
+    }
+
+    const previousImages = reply.images || [];
+    const imagesToRemove = previousImages.filter((img) => !retainImages.includes(img));
+    imagesToRemove.forEach((img) => {
+      const relativePath = img.startsWith('/') ? img.slice(1) : img;
+      const fullPath = path.join(process.cwd(), relativePath);
+      fs.unlink(fullPath, (error) => {
+        if (error && error.code !== 'ENOENT') {
+          console.warn('Failed to remove old reply image:', fullPath, error.message);
+        }
+      });
+    });
+
+    reply.message = message;
+    reply.images = [...retainImages, ...newImages];
+    reply.adminName = req.user.name || reply.adminName || 'Admin';
+    reply.editedAt = new Date();
+
+    doc.markModified('replies');
     await doc.save();
 
-    res.json(doc);
+    res.json({ review: doc, reply });
   } catch (err) {
-    console.error('replyToReview error:', err);
+    console.error('updateReply error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -250,8 +875,14 @@ const setVisibility = async (req, res) => {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
-    if (action === 'hide') doc.status = 'hidden';
-    else if (action === 'unhide') doc.status = 'public';
+    if (action === 'hide') {
+      doc.status = 'hidden';
+      doc.isPinned = false;
+      doc.pinnedAt = null;
+      doc.pinnedBy = undefined;
+    } else if (action === 'unhide') {
+      doc.status = 'public';
+    }
     else return res.status(400).json({ message: 'Invalid action' });
 
     await doc.save();
@@ -262,12 +893,85 @@ const setVisibility = async (req, res) => {
   }
 };
 
+// ---------- ADMIN: delete reply ----------
+const deleteReply = async (req, res) => {
+  try {
+    if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+
+    const doc = await Review.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+
+    const reply = doc.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ message: 'Reply not found' });
+
+    if (reply.admin?.toString() !== req.user?._id?.toString()) {
+      return res.status(403).json({ message: 'You can only delete your own replies' });
+    }
+
+    reply.deleteOne();
+    doc.replyCount = doc.replies.length;
+    await doc.save();
+
+    res.json({ message: 'Reply removed', id: req.params.replyId });
+  } catch (err) {
+    console.error('deleteReply error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ---------- ADMIN: pin / unpin ----------
+const pinReview = async (req, res) => {
+  try {
+    if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+
+    const action = vstr(req.body?.action) || 'pin';
+    const doc = await Review.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+
+    if (doc.status === 'deleted') return res.status(400).json({ message: 'Cannot pin deleted review' });
+
+    if (action === 'pin' || action === 'toggle') {
+      const shouldPin = action === 'pin' ? true : !doc.isPinned;
+      if (shouldPin) {
+        doc.isPinned = true;
+        doc.pinnedAt = new Date();
+        doc.pinnedBy = req.user._id;
+      } else {
+        doc.isPinned = false;
+        doc.pinnedAt = null;
+        doc.pinnedBy = undefined;
+      }
+    } else if (action === 'unpin') {
+      doc.isPinned = false;
+      doc.pinnedAt = null;
+      doc.pinnedBy = undefined;
+    } else {
+      return res.status(400).json({ message: 'Invalid action' });
+    }
+
+    await doc.save();
+    res.json(doc);
+  } catch (err) {
+    console.error('pinReview error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createReview,
   getReviews,
   getReviewById,
   updateReview,
   deleteReview,
+  listDeletedReviews,
+  restoreReview,
+  purgeReview,
   replyToReview,
-  setVisibility
+  updateReply,
+  setVisibility,
+  deleteReply,
+  pinReview,
+  getProductReviews,
+  canUserReviewProduct,
+  upload
 };

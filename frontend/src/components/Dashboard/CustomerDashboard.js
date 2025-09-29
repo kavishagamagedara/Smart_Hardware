@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import MyReviews from "../Reviews_&_Feedback/MyReviewsNew";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -37,7 +38,7 @@ export default function CustomerDashboard() {
         }
       })();
     }
-    if (tab === "myfeedback") {
+    /*if (tab === "myfeedback") {
       (async () => {
         try {
           const f = await fetch(`${API}/feedback/my`, { headers });
@@ -46,7 +47,7 @@ export default function CustomerDashboard() {
           setMyFeedbacks([]);
         }
       })();
-    }
+    }*/
   }, [tab, token]);
 
   /* ---- Profile ---- */
@@ -175,25 +176,14 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Feedback */}
-        {tab === "myfeedback" && (
-          <div className="card overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead><tr><th>Date</th><th>Product</th><th>Message</th><th>Reply</th></tr></thead>
-              <tbody>
-                {myFeedbacks.length === 0 ? <tr><td colSpan={4}>No feedback</td></tr> :
-                  myFeedbacks.map(f => (
-                    <tr key={f._id}>
-                      <td>{new Date(f.date).toLocaleDateString()}</td>
-                      <td>{f.productName}</td>
-                      <td>{f.message}</td>
-                      <td>{f.reply || "-"}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* Feedback (My Reviews) */}
+{tab === "myfeedback" && (
+  <div className="card overflow-x-auto p-4">
+    <h3 className="text-lg font-bold mb-4">My Reviews</h3>
+    <MyReviews />
+  </div>
+)}
+
 
         {/* Profile + Settings (unchanged) */}
         {tab === "profile" && (

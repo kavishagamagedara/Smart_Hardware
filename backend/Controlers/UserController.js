@@ -72,7 +72,15 @@ const createUser = async (req, res) => {
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
-    // only admin can set role
+
+    // Only allow valid roles from Role collection, fallback to 'user'
+    let assignedRole = "user";
+    if (role) {
+      const roleDoc = await require("../Model/RoleModel").findOne({ name: String(role).toLowerCase() });
+      if (roleDoc) assignedRole = roleDoc.name;
+    }
+
+    // only admin can set non-default roles
     let callerIsAdmin = false;
     try {
       const hdr = req.headers.authorization || "";
@@ -85,6 +93,7 @@ const createUser = async (req, res) => {
     } catch {
       callerIsAdmin = false;
     }
+    if (!callerIsAdmin && assignedRole !== "user") assignedRole = "user";
 
     const hashed = await bcrypt.hash(password, 10);
     const doc = new User({
@@ -93,7 +102,7 @@ const createUser = async (req, res) => {
       password: hashed,
       age,
       address,
-      role: callerIsAdmin && role ? String(role).toLowerCase() : "user",
+      role: assignedRole,
     });
 
     await doc.save();
@@ -133,6 +142,7 @@ const getUserById = async (req, res) => {
 /* ------------------------------- Update ---------------------------------- */
 const updateUser = async (req, res) => {
   try {
+
     const { password, role, ...rest } = req.body;
     const update = { ...rest };
 
@@ -141,9 +151,16 @@ const updateUser = async (req, res) => {
       (req.userPerms || []).includes("manage_users");
 
     if (role !== undefined) {
-      if (!isAdmin)
+      // Only allow valid roles from Role collection, fallback to 'user'
+      let assignedRole = "user";
+      if (role) {
+        const roleDoc = await require("../Model/RoleModel").findOne({ name: String(role).toLowerCase() });
+        if (roleDoc) assignedRole = roleDoc.name;
+      }
+      if (!isAdmin && assignedRole !== "user") {
         return res.status(403).json({ message: "Forbidden to change role" });
-      update.role = String(role).toLowerCase();
+      }
+      update.role = assignedRole;
     }
 
     const u = await User.findByIdAndUpdate(req.params.id, update, {

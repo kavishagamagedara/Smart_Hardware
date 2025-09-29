@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./CustomerOrders.css";
 
 function CustomerOrders() {
   const [orders, setOrders] = useState([]);
@@ -21,10 +20,10 @@ function CustomerOrders() {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("You must login first");
 
-        const response = await fetch("http://localhost:5000/api/orders/orders", {
+        const response = await fetch("http://localhost:5000/api/orders", {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -47,19 +46,23 @@ function CustomerOrders() {
     fetchOrders();
   }, []);
 
+  // ✅ Cancel order
   const handleCancel = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/orders/cancel/${orderId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ cancelReason: "Customer requested" }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/orders/cancel/${orderId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ cancelReason: "Customer requested" }),
+        }
+      );
 
       if (!response.ok) {
         const errData = await response.json();
@@ -74,6 +77,7 @@ function CustomerOrders() {
     }
   };
 
+  // ✅ Search
   const handleSearch = () => {
     const filteredOrders = allOrders.filter((order) =>
       Object.values(order).some(
@@ -86,6 +90,7 @@ function CustomerOrders() {
     setNoResults(filteredOrders.length === 0);
   };
 
+  // ✅ Sort
   const handleSort = (field) => {
     if (!field) return;
 
@@ -94,8 +99,10 @@ function CustomerOrders() {
     const orderMultiplier = sortOrder === "asc" ? 1 : -1;
 
     sortedOrders.sort((a, b) => {
-      if (typeof a[field] === "string") return a[field].localeCompare(b[field]) * orderMultiplier;
-      if (typeof a[field] === "number") return (a[field] - b[field]) * orderMultiplier;
+      if (typeof a[field] === "string")
+        return a[field].localeCompare(b[field]) * orderMultiplier;
+      if (typeof a[field] === "number")
+        return (a[field] - b[field]) * orderMultiplier;
       return 0;
     });
 
@@ -103,6 +110,21 @@ function CustomerOrders() {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
+  // ✅ Navigate to Add Review page
+  const handleAddReview = (productId, productName) => {
+    if (!productId || productId.length !== 24) {
+      alert("⚠️ Invalid productId, cannot review this item.");
+      return;
+    }
+
+    navigate(
+      `/add-review?productId=${productId}&productName=${encodeURIComponent(
+        productName
+      )}`
+    );
+  };
+
+  // ⬇️ THESE RETURNS must stay inside the function
   if (loading) return <p>Loading orders...</p>;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
@@ -110,6 +132,7 @@ function CustomerOrders() {
     <div className="orders-container">
       <h2>My Orders</h2>
 
+      {/* Search */}
       <div className="search-bar">
         <input
           type="text"
@@ -120,6 +143,7 @@ function CustomerOrders() {
         <button onClick={handleSearch}>Search</button>
       </div>
 
+      {/* Sort */}
       <div className="sort-dropdown">
         <label htmlFor="sort">Sort By: </label>
         <select
@@ -136,6 +160,7 @@ function CustomerOrders() {
 
       {noResults && <p>No Orders Found</p>}
 
+      {/* Orders List */}
       {orders.length > 0 ? (
         orders.map((order) => (
           <div key={order._id} className="order-card">
@@ -148,8 +173,16 @@ function CustomerOrders() {
             {Array.isArray(order.items) && order.items.length > 0 ? (
               <ul>
                 {order.items.map((item, idx) => (
-                  <li key={idx}>
+                  <li key={item.productId || idx}>
                     {item.productName} - Qty: {item.quantity} @ ${item.price}
+                    <button
+                      className="review-btn"
+                      onClick={() =>
+                        handleAddReview(item.productId, item.productName)
+                      }
+                    >
+                      ➕ Add Review
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -159,7 +192,10 @@ function CustomerOrders() {
 
             <div className="order-buttons">
               {order.status !== "Canceled" && (
-                <button onClick={() => handleCancel(order._id)} className="cancel-btn">
+                <button
+                  onClick={() => handleCancel(order._id)}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
               )}
