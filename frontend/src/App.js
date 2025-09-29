@@ -1,3 +1,5 @@
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Signup";
 // src/App.js
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -39,17 +41,13 @@ import SubmitReview from "./components/Reviews_&_Feedback/SubmitReviewNew"
 import ProductReviews from "./components/Reviews_&_Feedback/ProductReviews";
 import CareDashboard from "./components/Dashboard/CareDashboard";
 
+
 import Home from "./components/Basics/Home";
 import Header from "./components/Basics/Header";
 import Footer from "./components/Basics/Footer";
-
-import Login from "./components/Auth/Login";
-import Register from "./components/Auth/Signup";
-
 import { useAuth } from "./components/context/AuthContext";
-import "./App.css";
 
-/* ---------------- Protected Route Wrapper ---------------- */
+// ---------------- Protected Route Wrapper ----------------
 function PrivateRoute({ children, roles }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -68,7 +66,7 @@ function PrivateRoute({ children, roles }) {
   return children;
 }
 
-/* ---------------- Guest Route Wrapper ---------------- */
+// ---------------- Guest Route Wrapper ----------------
 function GuestRoute({ children }) {
   const { user } = useAuth();
   if (user) {
@@ -85,118 +83,116 @@ function GuestRoute({ children }) {
   return children;
 }
 
+
 function App() {
   return (
     <AuthProvider>
-      {/* ✅ Admin Cart Provider */}
       <AdminCartProvider>
-        {/* ✅ Customer Cart Provider */}
         <CartProvider>
-          <Header />
+          <div className="app-container">
+            <Header />
+            <div className="content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                {/* Guest routes */}
+                <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+                <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
-          <div className="content">
-            <Routes>
-              <Route path="/" element={<Home />} />
+                {/* Customer routes */}
+                <Route path="/product/:id" element={<ProductDetails />} />
+                <Route path="/customer-products" element={<CustomerProductList />} />
+                <Route path="/CustomerDashboard" element={
+                  <PrivateRoute roles={["user"]}><CustomerDashboard /></PrivateRoute>
+                } />
+                <Route path="/customercart" element={
+                  <PrivateRoute roles={["user"]}><CustomerCart /></PrivateRoute>
+                } />
+                <Route path="/PaymentSuccess" element={
+                  <PrivateRoute roles={["user"]}><PaymentSuccess /></PrivateRoute>
+                } />
+                <Route path="/Checkout" element={
+                  <PrivateRoute roles={["user"]}><Checkout /></PrivateRoute>
+                } />
+                <Route path="/add-review" element={
+                  <PrivateRoute roles={["user"]}><SubmitReview /></PrivateRoute>
+                } />
+                <Route path="/CustomerOrders" element={
+                  <PrivateRoute roles={["user","admin"]}><CustomerOrders /></PrivateRoute>
+                } />
+                <Route path="/CancelledOrders" element={
+                  <PrivateRoute roles={["user","admin"]}><CancelledOrders /></PrivateRoute>
+                } />
 
-              {/* Guest routes */}
-              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-              <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+                {/* Admin routes */}
+                <Route path="/AdminDashboard" element={
+                  <PrivateRoute roles={["admin"]}><AdminDashboard /></PrivateRoute>
+                } />
+                <Route path="/AdminCart" element={
+                  <PrivateRoute roles={["admin"]}><AdminCart /></PrivateRoute>
+                } />
+                <Route path="/AdminUpdateOrder/:id" element={
+                  <PrivateRoute roles={["admin"]}><AdminUpdateOrder /></PrivateRoute>
+                } />
+                <Route path="/AdminCheckout" element={
+                  <PrivateRoute roles={["admin"]}><AdminCheckout /></PrivateRoute>
+                } />
+                <Route path="/products" element={
+                  <PrivateRoute roles={["admin"]}><ProductList /></PrivateRoute>
+                } />
+                {/* AdminOrders */}
+                <Route path="/AdminOrders" element={
+                  <PrivateRoute roles={["admin"]}><AdminOrders /></PrivateRoute>
+                } />
+                <Route path="/add-product" element={
+                  <PrivateRoute roles={["admin"]}><ProductForm /></PrivateRoute>
+                } />
+                <Route path="/update-product/:id" element={
+                  <PrivateRoute roles={["admin"]}><UpdateProduct /></PrivateRoute>
+                } />
 
-              {/* Customer routes */}
-              <Route path="/product/:id" element={<ProductDetails />} />
-              <Route path="/customer-products" element={<CustomerProductList />} />
-              <Route path="/CustomerDashboard" element={
-                <PrivateRoute roles={["user"]}><CustomerDashboard /></PrivateRoute>
-              } />
-              <Route path="/customercart" element={
-                <PrivateRoute roles={["user"]}><CustomerCart /></PrivateRoute>
-              } />
-              <Route path="/PaymentSuccess" element={
-                <PrivateRoute roles={["user"]}><PaymentSuccess /></PrivateRoute>
-              } />
-              <Route path="/Checkout" element={
-                <PrivateRoute roles={["user"]}><Checkout /></PrivateRoute>
-              } />
-              <Route path="/add-review" element={
-                <PrivateRoute roles={["user"]}><SubmitReview /></PrivateRoute>
-              } />
-              <Route path="/CustomerOrders" element={
-                <PrivateRoute roles={["user","admin"]}><CustomerOrders /></PrivateRoute>
-              } />
-              <Route path="/CancelledOrders" element={
-                <PrivateRoute roles={["user","admin"]}><CancelledOrders /></PrivateRoute>
-              } />
+                <Route path="/admin-supplier-product" element={
+                  <PrivateRoute roles={["admin"]}><SupplierAdminProductList /></PrivateRoute>
+                } />
+                <Route path="/caredashboard" element={
+                  <PrivateRoute roles={["customer care manager","admin"]}><CareDashboard /></PrivateRoute>
+                } />
 
-              {/* Admin routes */}
-              <Route path="/AdminDashboard" element={
-                <PrivateRoute roles={["admin"]}><AdminDashboard /></PrivateRoute>
-              } />
-              <Route path="/AdminCart" element={
-                <PrivateRoute roles={["admin"]}><AdminCart /></PrivateRoute>
-              } />
-              <Route path="/AdminUpdateOrder/:id" element={
-                <PrivateRoute roles={["admin"]}><AdminUpdateOrder /></PrivateRoute>
-              } />
-              <Route path="/AdminCheckout" element={
-                <PrivateRoute roles={["admin"]}><AdminCheckout /></PrivateRoute>
-              } />
-              <Route path="/products" element={
-                <PrivateRoute roles={["admin"]}><ProductList /></PrivateRoute>
-              } />
-              AdminOrders
-              <Route path="/AdminOrders" element={
-                <PrivateRoute roles={["admin"]}><AdminOrders /></PrivateRoute>
-              } />
-              <Route path="/add-product" element={
-                <PrivateRoute roles={["admin"]}><ProductForm /></PrivateRoute>
-              } />
-              <Route path="/update-product/:id" element={
-                <PrivateRoute roles={["admin"]}><UpdateProduct /></PrivateRoute>
-              } />
-              <Route path="/admin-supplier-product" element={
-                <PrivateRoute roles={["admin"]}><SupplierAdminProductList /></PrivateRoute>
-              } />
-              
-              <Route path="/caredashboard" element={
-                <PrivateRoute roles={["customer care manager","admin"]}><CareDashboard /></PrivateRoute>
-              } />
+                {/* Supplier routes */}
+                <Route path="/supplier-products" element={
+                  <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductList /></PrivateRoute>
+                } />
+                <Route path="/product/:id/reviews" element={<ProductReviews />} />
+                <Route path="/add-supplier-product" element={
+                  <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductForm /></PrivateRoute>
+                } />
+                <Route path="/update-supplier-product/:id" element={
+                  <PrivateRoute roles={["supplier","admin"]}><UpdateSupplierProduct /></PrivateRoute>
+                } />
+                {/* ReceivedOrders */}
+                <Route path="/supplier-admin-product/:id" element={
+                  <PrivateRoute roles={["supplier","admin"]}><SupplierProductDetails /></PrivateRoute>
+                } />
+                <Route path="/ReceivedOrders" element={
+                  <PrivateRoute roles={["supplier"]}><ReceivedOrders /></PrivateRoute>
+                } />
 
-              {/* Supplier routes */}
-              <Route path="/supplier-products" element={
-                <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductList /></PrivateRoute>
-              } />
-              <Route path="/product/:id/reviews" element={<ProductReviews />} />
-              <Route path="/add-supplier-product" element={
-                <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductForm /></PrivateRoute>
-              } />
-              <Route path="/update-supplier-product/:id" element={
-                <PrivateRoute roles={["supplier","admin"]}><UpdateSupplierProduct /></PrivateRoute>
-              } />
-              ReceivedOrders
-              <Route path="/supplier-admin-product/:id" element={
-                <PrivateRoute roles={["supplier","admin"]}><SupplierProductDetails /></PrivateRoute>
-              } />
-               <Route path="/ReceivedOrders" element={
-                <PrivateRoute roles={["supplier"]}><ReceivedOrders /></PrivateRoute>
-              } />
-
-              {/* Dashboards */}
-              <Route path="/dashboard" element={
-                <PrivateRoute roles={["user","supplier","admin"]}><Dashboard /></PrivateRoute>
-              } />
-              <Route path="/FinanceDashboard" element={
-                <PrivateRoute roles={["admin"]}><FinanceDashboard /></PrivateRoute>
-              } />
-              <Route path="/SalesDashboard" element={
-                <PrivateRoute roles={["admin"]}><SalesDashboard /></PrivateRoute>
-              } />
-              <Route path="/InventoryDashboard" element={
-                <PrivateRoute roles={["admin"]}><InventoryDashboard /></PrivateRoute>
-              } />
-            </Routes>
+                {/* Dashboards */}
+                <Route path="/dashboard" element={
+                  <PrivateRoute roles={["user","supplier","admin"]}><Dashboard /></PrivateRoute>
+                } />
+                <Route path="/FinanceDashboard" element={
+                  <PrivateRoute roles={["admin","finance manager"]}><FinanceDashboard /></PrivateRoute>
+                } />
+                <Route path="/SalesDashboard" element={
+                  <PrivateRoute roles={["admin"]}><SalesDashboard /></PrivateRoute>
+                } />
+                <Route path="/InventoryDashboard" element={
+                  <PrivateRoute roles={["admin"]}><InventoryDashboard /></PrivateRoute>
+                } />
+              </Routes>
+            </div>
+            <Footer />
           </div>
-
-          <Footer />
         </CartProvider>
       </AdminCartProvider>
     </AuthProvider>

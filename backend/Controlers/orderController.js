@@ -63,6 +63,17 @@ const addOrders = async (req, res) => {
 
     await newOrder.save();
 
+    // Decrease stock for each product
+    const ProductModel = require("../Model/ProductModel");
+    for (const item of normalizedItems) {
+      const product = await ProductModel.findById(item.productId);
+      if (product) {
+        product.stockAmount = Math.max(0, product.stockAmount - item.quantity);
+        product.inStock = product.stockAmount > 0;
+        await product.save();
+      }
+    }
+
     res.status(201).json({
       message: "Order placed successfully",
       order: newOrder,
