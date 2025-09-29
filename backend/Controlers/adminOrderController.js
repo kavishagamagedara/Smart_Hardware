@@ -162,17 +162,35 @@ exports.getOrdersForSupplier = async (req, res) => {
 };
 
 
+
+// Confirm payment (set paymentStatus to Successful)
 exports.confirmOrder = async (req, res) => {
   try {
     const order = await AdminOrder.findByIdAndUpdate(
       req.params.id,
-      { status: "Confirmed" },
+      { paymentStatus: "Successful" },
       { new: true }
     );
     if (!order) return res.status(404).json({ message: "Order not found" });
-    res.json({ message: "Order confirmed", order });
+    res.json({ message: "Payment confirmed", order });
   } catch (err) {
     console.error("Confirm Order Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Decline payment (set paymentStatus to Unsuccessful)
+exports.declineOrder = async (req, res) => {
+  try {
+    const order = await AdminOrder.findByIdAndUpdate(
+      req.params.id,
+      { paymentStatus: "Unsuccessful" },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.json({ message: "Payment declined", order });
+  } catch (err) {
+    console.error("Decline Order Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -165,9 +165,7 @@ function App() {
               <Route path="/supplier-products" element={
                 <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductList /></PrivateRoute>
               } />
-              <Route path="/product/:id/reviews" element={
-                <PrivateRoute roles={["user","supplier","admin"]}><ProductReviews /></PrivateRoute>
-              } />
+              <Route path="/product/:id/reviews" element={<ProductReviews />} />
               <Route path="/add-supplier-product" element={
                 <PrivateRoute roles={["user","supplier","admin"]}><SupplierProductForm /></PrivateRoute>
               } />

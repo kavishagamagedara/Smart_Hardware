@@ -8,7 +8,9 @@ const {
   updateAdminOrder,
   deleteAdminOrder,
   cancelAdminOrder,
-  getOrdersForSupplier, // ✅ import supplier-specific controller
+  getOrdersForSupplier,
+  confirmOrder,
+  declineOrder,
 } = require("../Controlers/adminOrderController");
 
 const { requireAuth } = require("../middleware/auth"); // ✅ make sure suppliers are authenticated
@@ -36,6 +38,11 @@ router.get("/supplier", requireAuth, getOrdersForSupplier);
 router.get("/:id", requireAuth, getAdminOrderById);
 router.put("/:id", requireAuth, updateAdminOrder);
 router.delete("/:id", requireAuth, deleteAdminOrder);
+
+// Confirm payment (supplier)
+router.put("/:id/confirm", requireAuth, confirmOrder);
+// Decline payment (supplier)
+router.put("/:id/decline", requireAuth, declineOrder);
 router.put("/:id/cancel", requireAuth, cancelAdminOrder);
 
 module.exports = router;

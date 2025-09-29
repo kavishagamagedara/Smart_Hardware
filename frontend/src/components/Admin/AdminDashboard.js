@@ -834,6 +834,38 @@ export default function AdminDashboard() {
         )}
 
 
+
+        {/* FEEDBACK TAB */}
+        {tab === "feedback" && (
+          <div className="card p-4">
+            <div className="flex gap-2 mb-4">
+              <button
+                className={`btn px-4 py-2 rounded-xl ${feedbackTab === "reviews" ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => setFeedbackTab("reviews")}
+              >
+                Reviews
+              </button>
+              <button
+                className={`btn px-4 py-2 rounded-xl ${feedbackTab === "notifications" ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => setFeedbackTab("notifications")}
+              >
+                Notifications
+              </button>
+              <button
+                className={`btn px-4 py-2 rounded-xl ${feedbackTab === "recycle" ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => setFeedbackTab("recycle")}
+              >
+                Recycle Bin
+              </button>
+            </div>
+            <div>
+              {feedbackTab === "reviews" && <AdminReviews />}
+              {feedbackTab === "notifications" && <NotificationsPanel />}
+              {feedbackTab === "recycle" && <AdminReviewRecycleBin />}
+            </div>
+          </div>
+        )}
+
         {/* SUPPLIERS */}
         {tab === "suppliers" && (
           <div className="card">
