@@ -181,6 +181,8 @@ exports.getOrdersForSupplier = async (req, res) => {
 
 
 // Confirm payment (set paymentStatus to Successful)
+const Payment = require("../Model/paymentModel");
+const User = require("../Model/UserModel");
 exports.confirmOrder = async (req, res) => {
   try {
     const order = await AdminOrder.findByIdAndUpdate(
@@ -189,6 +191,25 @@ exports.confirmOrder = async (req, res) => {
       { new: true }
     );
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Only create payment if not already exists for this order
+    const existing = await Payment.findOne({ orderId: order._id, method: "slip" });
+    if (!existing && order.paymentMethod === "Bank Transfer") {
+      // Find the admin user (for userId field)
+      const adminUser = await User.findOne({ role: /admin/i });
+      await Payment.create({
+        paymentName: `AdminOrder ${order._id}`,
+        orderId: order._id,
+        userId: adminUser ? adminUser._id : undefined,
+        paymentStatus: "paid",
+        method: "slip",
+        amount: order.totalCost,
+        currency: "usd",
+        description: `Bank transfer for admin order ${order._id}`,
+        slipUrl: order.slip || undefined,
+      });
+    }
+
     res.json({ message: "Payment confirmed", order });
   } catch (err) {
     console.error("Confirm Order Error:", err);
