@@ -1,0 +1,79 @@
+.update-product-container {
+  max-width: 520px;
+  margin: 40px auto;
+  padding: clamp(20px, 4vw, 28px);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  color: var(--text-primary);
+}
+
+.update-product-container h2 {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: clamp(1.3rem, 3.8vw, 1.6rem);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.update-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.update-product-form label {
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.update-product-form input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.update-product-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.expiry-fieldset {
+  border: 1px dashed var(--surface-border);
+  border-radius: var(--border-radius-md);
+  padding: 14px 16px 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.expiry-fieldset legend {
+  padding: 0 6px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.expiry-controls {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 540px) {
+  .expiry-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.update-product-form button {
+  width: 100%;
+  margin-top: 8px;
+}

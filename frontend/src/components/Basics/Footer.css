@@ -1,0 +1,212 @@
+.site-footer {
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  color: var(--text-primary);
+  padding: 3.5rem 1.5rem 2rem;
+  margin-top: auto;
+  border-top: 1px solid var(--surface-border);
+}
+
+.footer-top {
+  max-width: 1180px;
+  margin: 0 auto 2.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2.5rem;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-logo img {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(61, 102, 255, 0.3);
+}
+
+.footer-logo span {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.footer-brand p {
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.footer-social {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.footer-social a {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--brand-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+.footer-social a:hover,
+.footer-social a:focus-visible {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  transform: translateY(-2px);
+}
+
+.footer-links,
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer-links h4,
+.footer-contact h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin-bottom: 0.75rem;
+}
+
+.footer-links button,
+.footer-links span {
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+.footer-links button:hover,
+.footer-links button:focus-visible {
+  color: var(--brand-600);
+}
+
+.footer-contact div {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--text-muted);
+}
+
+.footer-contact svg {
+  margin-top: 0.2rem;
+  color: var(--brand-600);
+}
+
+.footer-bottom {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footer-bottom p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.footer-meta-links {
+  display: inline-flex;
+  gap: 1rem;
+}
+
+.footer-meta-links a {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.footer-meta-links a:hover,
+.footer-meta-links a:focus-visible {
+  color: var(--brand-600);
+}
+
+html[data-theme="dark"] .site-footer {
+  background: radial-gradient(circle at top, rgba(46, 70, 140, 0.45), transparent 55%),
+    linear-gradient(180deg, rgba(10, 16, 36, 0.9) 0%, rgba(5, 9, 22, 0.92) 100%);
+  color: var(--text-primary);
+  border-top: 1px solid rgba(96, 119, 205, 0.28);
+  box-shadow: 0 -24px 60px -40px rgba(6, 12, 35, 0.65);
+}
+
+html[data-theme="dark"] .footer-logo img {
+  box-shadow: 0 10px 24px rgba(61, 102, 255, 0.2);
+}
+
+html[data-theme="dark"] .footer-social a {
+  background: rgba(96, 165, 250, 0.16);
+  color: #9cb6ff;
+}
+
+html[data-theme="dark"] .footer-social a:hover,
+html[data-theme="dark"] .footer-social a:focus-visible {
+  background: rgba(96, 165, 250, 0.4);
+  color: var(--accent-contrast);
+}
+
+html[data-theme="dark"] .footer-links button,
+html[data-theme="dark"] .footer-links span,
+html[data-theme="dark"] .footer-contact div,
+html[data-theme="dark"] .footer-bottom p,
+html[data-theme="dark"] .footer-meta-links a {
+  color: rgba(220, 230, 255, 0.78);
+}
+
+html[data-theme="dark"] .footer-meta-links a:hover,
+html[data-theme="dark"] .footer-meta-links a:focus-visible {
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .footer-top {
+    gap: 2rem;
+  }
+
+  .footer-logo span {
+    font-size: 1.35rem;
+  }
+
+  .footer-links button,
+  .footer-links span,
+  .footer-contact div {
+    font-size: 0.92rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer {
+    padding: 3rem 1.25rem 1.5rem;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

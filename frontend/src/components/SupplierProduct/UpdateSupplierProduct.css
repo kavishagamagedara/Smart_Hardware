@@ -1,0 +1,48 @@
+.update-form-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 25px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+.update-form-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.update-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.update-form input {
+  padding: 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  font-size: 15px;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.update-form button {
+  padding: 12px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #0a3cc2));
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.update-form button:hover {
+  filter: brightness(0.95);
+}
+
+html[data-theme="dark"] .update-form-container {
+  box-shadow: var(--card-shadow-strong);
+}

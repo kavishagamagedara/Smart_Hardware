@@ -1,0 +1,103 @@
+/* Container */
+.update-order-container {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Title */
+.update-order-container h1 {
+  text-align: center;
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Info text (contact, total) */
+.update-order-container p {
+  font-size: 16px;
+  color: #444;
+  margin: 8px 0;
+}
+
+.update-order-container strong {
+  color: #222;
+}
+
+/* Items section */
+.update-order-container h3 {
+  margin: 20px 0 10px;
+  color: #222;
+  font-size: 20px;
+}
+
+.item-block {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #fafafa;
+}
+
+.item-block p {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.item-block label {
+  font-size: 14px;
+  margin-right: 10px;
+  color: #555;
+}
+
+/* Quantity input */
+.item-block input[type="number"] {
+  width: 70px;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 15px;
+}
+
+/* Payment method dropdown */
+.update-order-container select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  transition: border 0.2s;
+}
+
+.update-order-container select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Button */
+.update-order-container button {
+  display: block;
+  width: 100%;
+  margin-top: 25px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  background: #007bff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+
+.update-order-container button:hover {
+  background: #0056b3;
+}

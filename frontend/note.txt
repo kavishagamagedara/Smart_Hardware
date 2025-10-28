@@ -1,0 +1,2 @@
+if (form.age && Number(form.age) < 18)
+  return setErr("You must be 18 or older");

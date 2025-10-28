@@ -1,0 +1,226 @@
+.supplier-payment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.supplier-payment-modal {
+  background: var(--card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  animation: modal-slide-up 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  border: 1px solid var(--border);
+}
+
+@keyframes modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.supplier-payment-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+}
+
+.supplier-payment-modal__header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text-strong);
+}
+
+.supplier-payment-modal__subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.supplier-payment-modal__close {
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.supplier-payment-modal__close:hover {
+  color: var(--text);
+}
+
+.supplier-payment-summary {
+  padding: 20px 24px 0;
+  display: grid;
+  gap: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.summary-row--total {
+  font-weight: 600;
+  color: var(--text-strong);
+  padding-top: 6px;
+  border-top: 1px dashed color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+.summary-label {
+  font-weight: 600;
+}
+
+.summary-value {
+  text-align: right;
+}
+
+.supplier-payment-form {
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.form-field input,
+.form-field textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--field-border);
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.form-field input[type="file"] {
+  padding: 8px 0;
+  border: none;
+}
+
+.form-helper {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form-error {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.supplier-payment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.supplier-payment-actions .btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+.supplier-payment-actions .btn:active {
+  transform: translateY(1px);
+}
+
+.supplier-payment-actions .btn-primary {
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #0a3cc2));
+  color: var(--accent-contrast);
+}
+
+.supplier-payment-actions .btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.supplier-payment-actions .btn-secondary {
+  background: color-mix(in oklab, var(--surface-2) 88%, transparent);
+  color: var(--text);
+}
+
+.supplier-payment-actions .btn-secondary:hover {
+  filter: brightness(0.96);
+}
+
+.supplier-payment-actions .btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 600px) {
+  .supplier-payment-modal {
+    max-width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .supplier-payment-modal__header {
+    padding: 20px;
+  }
+
+  .supplier-payment-summary {
+    padding: 20px 20px 0;
+  }
+
+  .supplier-payment-form {
+    padding: 20px;
+  }
+}
+
+html[data-theme="dark"] .supplier-payment-modal {
+  box-shadow: var(--card-shadow-strong);
+}
+
+html[data-theme="dark"] .supplier-payment-actions .btn-secondary {
+  background: color-mix(in oklab, var(--surface-2) 92%, transparent);
+  color: var(--text);
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Login</title>
+</head>
+<body>
+    <h1>Debug Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testUsers()">Test Users API</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <div id="output"></div>
+
+    <script>
+        const API = "http://localhost:5000/api";
+        
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    document.getElementById('output').innerHTML = `<pre>Login Success: ${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    document.getElementById('output').innerHTML = `<pre>Login Failed: ${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('output').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+        
+        async function testUsers() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    document.getElementById('output').innerHTML = '<pre>No token found. Please login first.</pre>';
+                    return;
+                }
+                
+                const response = await fetch(`${API}/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                console.log('Users response:', data);
+                document.getElementById('output').innerHTML = `<pre>Users: ${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                console.error('Users error:', error);
+                document.getElementById('output').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('output').innerHTML = '<pre>Storage cleared</pre>';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+.cancel-order-container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 25px;
+  background: var(--card);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-sans);
+  border: 1px solid var(--border);
+}
+
+.cancel-order-container h2 {
+  text-align: center;
+  color: var(--danger);
+  margin-bottom: 15px;
+}
+
+.cancel-order-container p {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: var(--text);
+}
+
+.radio-group {
+  margin-bottom: 15px;
+}
+
+.radio-group label {
+  display: block;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  margin-right: 10px;
+  accent-color: var(--danger);
+}
+
+.custom-reason-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  margin-top: 10px;
+  outline: none;
+  transition: border 0.3s;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.custom-reason-input:focus {
+  border-color: var(--danger);
+}
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  background: linear-gradient(135deg, var(--danger), color-mix(in oklab, var(--danger) 80%, #7f1d1d));
+  color: var(--accent-contrast);
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+  filter: brightness(0.92);
+}
+
+.submit-btn:active {
+  filter: brightness(0.88);
+}
+
+html[data-theme="dark"] .cancel-order-container {
+  box-shadow: var(--card-shadow-strong);
+}

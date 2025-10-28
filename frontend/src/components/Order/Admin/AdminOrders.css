@@ -1,0 +1,116 @@
+/* AdminOrders.css */
+
+/* Page container */
+.admin-orders-page {
+  padding: 30px;
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: var(--font-sans);
+}
+
+/* Heading */
+.admin-orders-page h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: var(--text-strong);
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Table styling */
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+.orders-table th {
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.orders-table td {
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* Hover row effect */
+.orders-table tr:hover {
+  background: color-mix(in oklab, var(--surface-2) 95%, transparent);
+  transition: background 0.2s ease-in-out;
+}
+
+/* Status column */
+.orders-table td:nth-child(4) {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+/* Buttons */
+.update-btn,
+.cancel-btn {
+  padding: 8px 14px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  margin-right: 8px;
+}
+
+/* Update button */
+.update-btn {
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #0a3cc2));
+  color: var(--accent-contrast);
+}
+
+.update-btn:hover {
+  filter: brightness(0.95);
+}
+
+/* Cancel button */
+.cancel-btn {
+  background: linear-gradient(135deg, var(--danger), color-mix(in oklab, var(--danger) 80%, #7f1d1d));
+  color: var(--accent-contrast);
+}
+
+.cancel-btn:hover {
+  filter: brightness(0.92);
+}
+
+/* Items list inside a cell */
+.orders-table td div {
+  background: color-mix(in oklab, var(--surface-2) 92%, transparent);
+  padding: 4px 8px;
+  margin: 3px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Loading & empty messages */
+.admin-orders-page p {
+  text-align: center;
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+
+html[data-theme="dark"] .orders-table {
+  box-shadow: var(--card-shadow-strong);
+}

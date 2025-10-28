@@ -1,0 +1,83 @@
+/* AdminCancelledOrders.css */
+
+/* Page container */
+.admin-cancelled-orders-page {
+  padding: 20px 40px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+/* Page title */
+.admin-cancelled-orders-page h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 28px;
+}
+
+/* Table styling */
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.orders-table th {
+  background-color: #0b74ff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.orders-table tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Items in cell */
+.orders-table td div {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+/* Responsive table for small screens */
+@media (max-width: 768px) {
+  .orders-table,
+  .orders-table thead,
+  .orders-table tbody,
+  .orders-table th,
+  .orders-table td,
+  .orders-table tr {
+    display: block;
+  }
+
+  .orders-table tr {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+  }
+
+  .orders-table td {
+    padding-left: 50%;
+    text-align: right;
+    position: relative;
+  }
+
+  .orders-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    width: 45%;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .orders-table th {
+    display: none;
+  }
+}

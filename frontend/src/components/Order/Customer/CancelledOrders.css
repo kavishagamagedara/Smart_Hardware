@@ -1,0 +1,291 @@
+.cancelled-orders-container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 28px);
+  color: var(--text-primary);
+}
+
+.cancelled-orders-container--embedded {
+  padding: 0;
+}
+
+.cancelled-orders-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cancelled-orders-header .heading-md {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  font-weight: 700;
+}
+
+.cancelled-orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(14px, 2.5vw, 18px);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-2);
+  box-shadow: var(--card-shadow-soft, 0 12px 24px -22px rgba(15, 23, 42, 0.32));
+}
+
+.cancelled-orders-search {
+  flex: 1 1 260px;
+  display: flex;
+}
+
+.cancelled-orders-search input {
+  width: 100%;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-1);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cancelled-orders-search input:focus {
+  outline: none;
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.cancelled-orders-refresh {
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.92) 0%, rgba(220, 38, 38, 0.85) 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+.cancelled-orders-refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 38px -24px rgba(220, 38, 38, 0.55);
+}
+
+.cancelled-orders-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelled-orders-list {
+  display: grid;
+  gap: clamp(16px, 3vw, 22px);
+}
+
+.cancelled-order-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 18px);
+  padding: clamp(18px, 3vw, 24px);
+  border-radius: var(--border-radius-xl, 20px);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background: linear-gradient(160deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.75) 60%, rgba(254, 226, 226, 0.45) 100%);
+  box-shadow: 0 28px 60px -38px rgba(239, 68, 68, 0.6);
+  overflow: hidden;
+}
+
+html[data-theme="dark"] .cancelled-order-card {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.94) 0%, rgba(15, 23, 42, 0.92) 55%, rgba(100, 116, 139, 0.35) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 24px 50px -30px rgba(239, 68, 68, 0.5);
+}
+
+.cancelled-order-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: 6px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(249, 115, 22, 0.9) 100%);
+}
+
+.cancelled-order-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cancelled-order-card__title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-strong);
+}
+
+.cancelled-order-card__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cancelled-order-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(185, 28, 28, 0.95);
+}
+
+.cancelled-order-card__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.cancelled-order-card__column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cancelled-order-card__column .label,
+.cancelled-order-card__reason .label,
+.cancelled-order-card__items .label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.cancelled-order-card__column .value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cancelled-order-card__reason {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.16);
+}
+
+html[data-theme="dark"] .cancelled-order-card__reason {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.cancelled-order-card__reason p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.cancelled-order-card__items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cancelled-order-card__items ul {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cancelled-order-card__items li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-1);
+}
+
+.item-name {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.item-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.status-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  font-size: 0.92rem;
+  border: 1px solid transparent;
+}
+
+.status-banner--info {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.28);
+  color: rgba(37, 99, 235, 0.9);
+}
+
+.status-banner--error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: rgba(185, 28, 28, 0.95);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.orders-empty-state {
+  padding: 1rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  border: 1px dashed var(--surface-border);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .cancelled-orders-toolbar {
+    padding: 14px;
+  }
+
+  .cancelled-order-card__body {
+    grid-template-columns: 1fr;
+  }
+
+  .cancelled-order-card {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .cancelled-orders-refresh {
+    width: 100%;
+    justify-content: center;
+    display: inline-flex;
+  }
+}

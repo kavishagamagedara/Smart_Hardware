@@ -1,0 +1,127 @@
+.product-reviews-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--text);
+}
+
+.product-reviews-header {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.product-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.product-summary-image {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid var(--brand-soft, rgba(64, 99, 255, 0.4));
+}
+
+.product-summary-details h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  color: var(--brand);
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.product-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.product-rating-summary strong {
+  font-size: 1.4rem;
+  color: var(--brand);
+}
+
+.rating-count {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--brand);
+  color: var(--surface);
+  box-shadow: 0 6px 16px rgba(64, 99, 255, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(64, 99, 255, 0.35);
+}
+
+.btn-secondary {
+  background-color: var(--surface-alt, rgba(148, 163, 184, 0.1));
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 768px) {
+  .product-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .product-summary-image {
+    width: 110px;
+    height: 110px;
+  }
+
+  .product-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}

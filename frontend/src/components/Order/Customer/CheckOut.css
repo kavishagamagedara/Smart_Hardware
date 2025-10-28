@@ -1,0 +1,97 @@
+.checkout-page {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 25px;
+  background-color: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-sans);
+  border: 1px solid var(--border);
+}
+
+.checkout-page h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: var(--text-strong);
+}
+
+.checkout-page div {
+  margin-bottom: 15px;
+}
+
+.checkout-page label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: var(--text);
+}
+
+.checkout-page input,
+.checkout-page select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  outline: none;
+  transition: 0.3s;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.checkout-page input:focus,
+.checkout-page select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.checkout-page h3 {
+  margin-top: 25px;
+  font-size: 22px;
+  color: var(--text-strong);
+  border-bottom: 2px solid color-mix(in oklab, var(--border) 80%, transparent);
+  padding-bottom: 8px;
+}
+
+.checkout-page p {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 8px 0;
+}
+
+.checkout-page button {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  background: linear-gradient(135deg, var(--success), color-mix(in oklab, var(--success) 75%, #0b3));
+  color: var(--accent-contrast);
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.checkout-page button:hover {
+  filter: brightness(0.95);
+}
+
+html[data-theme="dark"] .checkout-page {
+  box-shadow: var(--card-shadow-strong);
+}
+
+@media (max-width: 600px) {
+  .checkout-page {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .checkout-page h2 {
+    font-size: 24px;
+  }
+
+  .checkout-page h3 {
+    font-size: 20px;
+  }
+}

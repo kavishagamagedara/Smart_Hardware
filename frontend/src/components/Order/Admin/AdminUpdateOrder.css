@@ -1,0 +1,86 @@
+/* Container for the whole form */
+.update-order-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 25px;
+  background-color: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-sans);
+  border: 1px solid var(--border);
+}
+
+/* Page heading */
+.update-order-container h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: var(--accent-strong);
+}
+
+/* Each item block */
+.item-block {
+  border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background-color: color-mix(in oklab, var(--card) 90%, transparent);
+}
+
+.update-order-container label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--text);
+}
+
+/* Input fields */
+.update-order-container input[type="number"],
+.update-order-container select {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--field-border);
+  font-size: 16px;
+  box-sizing: border-box;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+/* Button */
+.update-order-container button[type="submit"] {
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #0a3cc2));
+  color: var(--accent-contrast);
+  font-weight: bold;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for button */
+.update-order-container button[type="submit"]:hover {
+  filter: brightness(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .update-order-container {
+    padding: 15px;
+  }
+
+  .update-order-container input[type="number"],
+  .update-order-container select {
+    font-size: 14px;
+  }
+
+  .update-order-container button[type="submit"] {
+    width: 100%;
+  }
+}
+
+html[data-theme="dark"] .update-order-container {
+  box-shadow: var(--card-shadow-strong);
+}
